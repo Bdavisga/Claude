@@ -43,6 +43,7 @@ export default function CalGeo() {
   const MAX_FREE_ANALYSES = 3;
   const [toolsSubTab, setToolsSubTab] = useState('history'); // 'history', 'compare', 'map'
   const [showAbout, setShowAbout] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [theme, setTheme] = useState('dark'); // 'dark', 'light', 'system'
 
   // Spot Price
@@ -699,16 +700,16 @@ export default function CalGeo() {
 
   const base = {
     container: { minHeight: '100vh', background: colors.bg, color: colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', WebkitFontSmoothing: 'antialiased', width: '100%', overflow: 'hidden' },
-    header: { background: effectiveTheme === 'light' ? '#ffffff' : 'rgba(15,15,15,0.98)', borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', boxShadow: colors.cardShadow },
-    main: { width: '100%', maxWidth: '100vw', margin: '0', padding: '12px 16px 100px', boxSizing: 'border-box' },
-    card: { background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '16px', marginBottom: '12px', boxShadow: colors.cardShadow, boxSizing: 'border-box' },
-    label: { display: 'block', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: colors.muted, marginBottom: '6px' },
-    select: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', fontWeight: '500', boxSizing: 'border-box' },
-    input: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '15px', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box', fontWeight: '600' },
+    header: { background: effectiveTheme === 'light' ? '#ffffff' : 'rgba(15,15,15,0.98)', borderBottom: `1px solid ${colors.border}`, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', boxShadow: colors.cardShadow },
+    main: { width: '100%', maxWidth: '600px', margin: '0 auto', padding: '16px 16px 100px', boxSizing: 'border-box' },
+    card: { background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '16px', marginBottom: '16px', boxShadow: colors.cardShadow, boxSizing: 'border-box' },
+    label: { display: 'block', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: colors.muted, marginBottom: '8px' },
+    select: { width: '100%', padding: '12px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', fontWeight: '500', boxSizing: 'border-box' },
+    input: { width: '100%', padding: '12px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '15px', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box', fontWeight: '600' },
     btn: { padding: '12px 18px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box' },
     btnGold: { background: `linear-gradient(135deg, ${colors.gold} 0%, ${effectiveTheme === 'light' ? '#b8960c' : '#c9a947'} 100%)`, color: effectiveTheme === 'light' ? '#000' : '#0a0a0a' },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
-    grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' },
+    grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' },
   };
 
   // ==================== RENDER ====================
@@ -720,28 +721,26 @@ export default function CalGeo() {
           <CalGeoLogo size={34} />
           <span style={{ fontSize: '22px', fontWeight: '700', background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CalGeo</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isLoggedIn ? (
-            <span style={{ fontSize: '10px', color: colors.gold, fontWeight: '600' }}>👤 {username}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '13px', color: colors.text, fontWeight: '600' }}>{username}</span>
+              <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '12px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#555', color: userTier === 'free' ? '#aaa' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</span>
+            </div>
           ) : (
-            <button onClick={() => setShowLogin(true)} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.gold }}>Login</button>
+            <button onClick={() => setShowLogin(true)} style={{ ...base.btn, padding: '6px 12px', fontSize: '12px', background: `${colors.gold}15`, border: `1px solid ${colors.gold}40`, color: colors.gold }}>Login</button>
           )}
-          {userTier === 'free' && <span style={{ fontSize: '9px', color: colors.muted }}>{MAX_FREE_ANALYSES - analysisCount}</span>}
-          <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, padding: '4px 8px', fontSize: '9px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#333', color: userTier === 'free' ? '#888' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</button>
-          <button onClick={() => { const next = theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark'; setTheme(next); localStorage.setItem('calgeo_theme', next); }} style={{ ...base.btn, padding: '6px 8px', fontSize: '16px', background: effectiveTheme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)', border: `1px solid ${colors.border}` }} title={`Theme: ${theme}`}>
-            {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '💻'}
-          </button>
-          <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '28px', height: '28px', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+          <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '32px', height: '32px', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
           </button>
         </div>
       </header>
 
       <main style={base.main}>
         {/* TABS - Condensed */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
           {[
             { id: 'gold', icon: '🥇', label: 'Gold', color: colors.gold },
             { id: 'silver', icon: '⚪', label: 'Silver', color: '#c0c0c0' },
@@ -1497,6 +1496,102 @@ export default function CalGeo() {
         </div>
       )}
 
+      {/* SETTINGS MODAL */}
+      {showSettings && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px', overflowY: 'auto' }} onClick={() => setShowSettings(false)}>
+          <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>⚙️ Settings</div>
+              <button onClick={() => setShowSettings(false)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
+            </div>
+
+            {/* THEME SELECTION */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '10px' }}>Display Mode</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setTheme('dark')}
+                  style={{
+                    ...base.btn,
+                    flex: 1,
+                    padding: '12px',
+                    background: theme === 'dark' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${theme === 'dark' ? colors.gold : colors.border}`,
+                    color: theme === 'dark' ? colors.gold : colors.text,
+                    fontWeight: theme === 'dark' ? '600' : '400'
+                  }}
+                >
+                  🌙 Dark
+                </button>
+                <button
+                  onClick={() => setTheme('light')}
+                  style={{
+                    ...base.btn,
+                    flex: 1,
+                    padding: '12px',
+                    background: theme === 'light' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${theme === 'light' ? colors.gold : colors.border}`,
+                    color: theme === 'light' ? colors.gold : colors.text,
+                    fontWeight: theme === 'light' ? '600' : '400'
+                  }}
+                >
+                  ☀️ Light
+                </button>
+                <button
+                  onClick={() => setTheme('system')}
+                  style={{
+                    ...base.btn,
+                    flex: 1,
+                    padding: '12px',
+                    background: theme === 'system' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${theme === 'system' ? colors.gold : colors.border}`,
+                    color: theme === 'system' ? colors.gold : colors.text,
+                    fontWeight: theme === 'system' ? '600' : '400'
+                  }}
+                >
+                  💻 System
+                </button>
+              </div>
+              <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>
+                {theme === 'system' ? 'Automatically matches your device settings' : `Always use ${theme} mode`}
+              </div>
+            </div>
+
+            {/* STATE SELECTION */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '10px' }}>Sales Tax Location</div>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                style={{
+                  ...base.input,
+                  width: '100%',
+                  padding: '12px',
+                  background: colors.inputBg,
+                  border: `1px solid ${colors.inputBorder}`,
+                  color: colors.text,
+                  fontSize: '13px'
+                }}
+              >
+                <option value="">No Sales Tax</option>
+                {Object.keys(STATE_TAX_RATES).map(state => (
+                  <option key={state} value={state}>
+                    {state} ({(STATE_TAX_RATES[state] * 100).toFixed(2)}% tax)
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>
+                Select your state to include sales tax in calculations
+              </div>
+            </div>
+
+            <div style={{ fontSize: '10px', color: '#666', textAlign: 'center', marginTop: '20px' }}>
+              CalGeo v1.2 • Settings saved automatically
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MENU DRAWER */}
       {showMenu && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100 }} onClick={() => setShowMenu(false)}>
@@ -1512,6 +1607,7 @@ export default function CalGeo() {
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
               {[
+                { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } },
                 { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
                 { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
                 { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
