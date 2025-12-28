@@ -1,6 +1,26 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** December 28, 2025
+**Last Updated:** December 28, 2025 - 3:30 PM EST
+
+---
+
+## 🔧 December 28, 2025 - Critical Build Fix
+
+### **Fixed Stripe Build Error**
+- **Problem:** Build failing with `"Neither apiKey nor config.authenticator provided"`
+- **Root cause:** Stripe was initialized at module level without env vars during build
+- **Solution:** Moved Stripe initialization inside API route functions
+- **Changes:**
+  - `app/api/checkout/route.js` - Initialize Stripe in POST function with env check
+  - `app/api/webhooks/stripe/route.js` - Initialize Stripe in POST function with env check
+- **Added safety checks:**
+  - Verify `STRIPE_SECRET_KEY` exists before initialization
+  - Verify `STRIPE_WEBHOOK_SECRET` exists for webhooks
+  - Return proper error if Stripe not configured
+- **Impact:** Build now succeeds without Stripe env vars, Stripe initializes properly at runtime
+
+**Files Modified:** 2
+**Lines Changed:** +12 -4
 
 ---
 
