@@ -8,15 +8,14 @@ export async function GET() {
     if (response.ok) {
       const data = await response.json();
 
-      // goldprice.org returns price per troy ounce
+      // goldprice.org returns price per troy ounce in xauPrice/xagPrice
       // Convert to price per gram (1 troy oz = 31.1035 grams)
-      if (data?.items) {
-        const goldData = data.items.find(item => item.curr === 'XAU');
-        const silverData = data.items.find(item => item.curr === 'XAG');
+      if (data?.items && data.items.length > 0) {
+        const priceData = data.items[0]; // First item has USD prices
 
-        if (goldData?.xauPrice) {
-          const goldPerGram = goldData.xauPrice / 31.1035;
-          const silverPerGram = silverData?.xagPrice ? silverData.xagPrice / 31.1035 : 1.02;
+        if (priceData.xauPrice && priceData.xagPrice) {
+          const goldPerGram = priceData.xauPrice / 31.1035;
+          const silverPerGram = priceData.xagPrice / 31.1035;
 
           return NextResponse.json({
             price_per_gram: parseFloat(goldPerGram.toFixed(2)),
