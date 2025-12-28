@@ -404,20 +404,34 @@ const isJadeColorLocked = (tier, colorValue) => {
 // ==================== STRIPE CHECKOUT ====================
 const initiateCheckout = async (tier, userId) => {
   try {
+    console.log('Initiating checkout for:', tier, userId);
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tier, userId }),
     });
 
+    console.log('Checkout response status:', res.status);
+
     if (res.ok) {
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+      console.log('Checkout response data:', data);
+
+      if (data.url) {
+        console.log('Redirecting to:', data.url);
+        window.location.href = data.url;
+      } else {
+        console.error('No URL in response:', data);
+        alert('Error: No checkout URL received');
+      }
+    } else {
+      const error = await res.json();
+      console.error('Checkout failed:', error);
+      alert('Checkout failed: ' + (error.error || 'Unknown error'));
     }
   } catch (e) {
     console.error('Checkout error:', e);
-    // Fallback: show manual upgrade instructions
-    alert('Upgrade coming soon! Email support@calgeo.app');
+    alert('Upgrade error: ' + e.message);
   }
 };
 

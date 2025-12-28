@@ -1478,17 +1478,50 @@ export default function CalGeo() {
         </div>
       )}
 
-      {/* UPGRADE MODAL */}
+      {/* UPGRADE MODAL - Triggers Stripe Checkout */}
       {showUpgrade && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowUpgrade(false)}>
           <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '340px', width: '100%', border: `1px solid ${colors.gold}30` }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: '18px' }}><div style={{ fontSize: '32px' }}>💎</div><div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>Upgrade CalGeo</div></div>
-            {[{ tier: 'free', name: 'Free', price: '$0', features: '3 AI scans/month', color: '#555' }, { tier: 'pro', name: 'Pro', price: '$4.99/mo', features: '50 scans • Full history', color: '#3b82f6' }, { tier: 'expert', name: 'Expert', price: '$9.99/mo', features: 'Unlimited • AI insights', color: colors.gold }].map((p) => (
-              <div key={p.tier} onClick={() => { setUserTier(p.tier); localStorage.setItem('calgeo_tier', p.tier); if (p.tier !== 'free') { setAnalysisCount(0); localStorage.setItem('calgeo_analyses', '0'); }}} style={{ background: userTier === p.tier ? `${p.color}20` : 'rgba(255,255,255,0.03)', border: userTier === p.tier ? `2px solid ${p.color}` : `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px', marginBottom: '8px', cursor: 'pointer' }}>
-                <div style={{ fontWeight: '600', color: p.color }}>{p.name}</div><div style={{ fontSize: '10px', color: colors.muted }}>{p.features}</div><div style={{ fontSize: '15px', fontWeight: '700', color: p.color, marginTop: '4px' }}>{p.price}</div>
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ fontSize: '32px' }}>💎</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>Upgrade CalGeo</div>
+            </div>
+
+            {/* Current Tier Display */}
+            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '12px', marginBottom: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: colors.muted }}>Current Tier</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: userTier === 'expert' ? colors.gold : userTier === 'pro' ? '#3b82f6' : '#888', textTransform: 'uppercase' }}>{userTier}</div>
+            </div>
+
+            {/* Pro Tier */}
+            <div
+              onClick={() => { setShowUpgrade(false); initiateCheckout('pro', userId); }}
+              style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid #3b82f6', borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '16px' }}>⭐ Pro</div>
+                  <div style={{ fontSize: '10px', color: colors.muted }}>25 scans • History • Targets</div>
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>$4.99<span style={{ fontSize: '11px' }}>/mo</span></div>
               </div>
-            ))}
-            <button onClick={() => setShowUpgrade(false)} style={{ ...base.btn, ...base.btnGold, width: '100%', marginTop: '10px' }}>{userTier === 'free' ? 'Continue Free' : 'Done'}</button>
+            </div>
+
+            {/* Expert Tier */}
+            <div
+              onClick={() => { setShowUpgrade(false); initiateCheckout('expert', userId); }}
+              style={{ background: `${colors.gold}15`, border: `2px solid ${colors.gold}`, borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: '700', color: colors.gold, fontSize: '16px' }}>💎 Expert</div>
+                  <div style={{ fontSize: '10px', color: colors.muted }}>Unlimited everything</div>
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>$9.99<span style={{ fontSize: '11px' }}>/mo</span></div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowUpgrade(false)} style={{ ...base.btn, width: '100%', marginTop: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
           </div>
         </div>
       )}
