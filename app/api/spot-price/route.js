@@ -2,35 +2,63 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Try to fetch from Gold API
-    const response = await fetch('https://www.goldapi.io/api/XAU/USD', {
-      headers: {
-        'x-access-token': 'goldapi-YOUR_API_KEY', // Replace with actual API key
-      },
-    });
+    // Try to fetch from free metals API
+    const response = await fetch('https://api.metals.dev/v1/latest?api_key=demo&currency=USD&unit=g');
 
     if (response.ok) {
       const data = await response.json();
-      // Convert price per troy ounce to price per gram
-      // 1 troy ounce = 31.1035 grams
-      const pricePerOunce = data.price || 2400; // Default fallback
-      const pricePerGram = pricePerOunce / 31.1035;
 
-      return NextResponse.json({
-        price_per_gram: parseFloat(pricePerGram.toFixed(2)),
-        silver_per_gram: 0.98, // Placeholder for silver
-        source: 'api',
-        timestamp: new Date().toISOString(),
-      });
+      // Extract gold and silver prices per gram
+      const goldPerGram = data?.metals?.gold || null;
+      const silverPerGram = data?.metals?.silver || null;
+
+      if (goldPerGram) {
+        return NextResponse.json({
+          price_per_gram: parseFloat(goldPerGram.toFixed(2)),
+          silver_per_gram: silverPerGram ? parseFloat(silverPerGram.toFixed(2)) : 0.98,
+          source: 'metals.dev',
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
   } catch (error) {
-    console.error('Gold API error:', error);
+    console.error('Metals API error:', error);
   }
 
-  // Fallback to cached/default prices
+  // Try alternative free API
+  try {
+    const response = await fetch('https://api.metalpriceapi.com/v1/latest?api_key=demo&base=USD&currencies=XAU,XAG');
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // These APIs return price of 1 USD in troy oz of gold/silver
+      // We need to invert and convert to grams
+      if (data?.rates?.XAU) {
+        const ozPerDollar = data.rates.XAU;
+        const pricePerOz = 1 / ozPerDollar;
+        const pricePerGram = pricePerOz / 31.1035;
+
+        const silverPricePerGram = data?.rates?.XAG
+          ? (1 / data.rates.XAG) / 31.1035
+          : 0.98;
+
+        return NextResponse.json({
+          price_per_gram: parseFloat(pricePerGram.toFixed(2)),
+          silver_per_gram: parseFloat(silverPricePerGram.toFixed(2)),
+          source: 'metalpriceapi',
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+  } catch (error) {
+    console.error('MetalPrice API error:', error);
+  }
+
+  // Fallback to cached/default prices (current market estimate)
   return NextResponse.json({
-    price_per_gram: 84.20, // Default gold price per gram
-    silver_per_gram: 0.98,  // Default silver price per gram
+    price_per_gram: 84.20, // Default gold price per gram (~$2600/oz)
+    silver_per_gram: 0.98,  // Default silver price per gram (~$30/oz)
     source: 'cached',
     timestamp: new Date().toISOString(),
   });
