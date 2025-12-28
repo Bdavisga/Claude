@@ -36,12 +36,18 @@ export default function CalGeo() {
   const [userTier, setUserTier] = useState('free');
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
   const [analysisCount, setAnalysisCount] = useState(0);
   const MAX_FREE_ANALYSES = 3;
+  const [showBottomSidebar, setShowBottomSidebar] = useState(null); // 'history', 'compare', 'map', or null
 
   // Spot Price
+  const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
   const [spotPriceKarat, setSpotPriceKarat] = useState('24');
   const [spotPrice24k, setSpotPrice24k] = useState(84.20);
+  const [spotPriceSilver, setSpotPriceSilver] = useState(0.98); // per gram
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [priceSource, setPriceSource] = useState('');
@@ -105,11 +111,17 @@ export default function CalGeo() {
       const t = localStorage.getItem('calgeo_tier');
       const a = localStorage.getItem('calgeo_analyses');
       const st = localStorage.getItem('calgeo_state');
+      const u = localStorage.getItem('calgeo_user');
       if (h) setHistory(JSON.parse(h));
       if (s) setShoppingList(JSON.parse(s));
       if (t) setUserTier(t);
       if (a) setAnalysisCount(parseInt(a) || 0);
       if (st) setSelectedState(st);
+      if (u) {
+        const userData = JSON.parse(u);
+        setIsLoggedIn(true);
+        setUsername(userData.username);
+      }
     } catch (e) { console.error('Load error:', e); }
 
     refreshSpotPrice();
@@ -442,6 +454,7 @@ export default function CalGeo() {
       if (res.ok) {
         const data = await res.json();
         setSpotPrice24k(data.price_per_gram || data.karats?.['24'] || 84.20);
+        setSpotPriceSilver(data.silver_per_gram || 0.98);
         setPriceSource(data.source || 'api');
         setLastUpdated(new Date().toLocaleTimeString());
       }
@@ -450,6 +463,22 @@ export default function CalGeo() {
       setPriceSource('cached');
     }
     setIsRefreshing(false);
+  };
+
+  const handleLogin = (user, pass) => {
+    // Simple login - in production, verify against backend
+    if (user && pass) {
+      setIsLoggedIn(true);
+      setUsername(user);
+      localStorage.setItem('calgeo_user', JSON.stringify({ username: user }));
+      setShowLogin(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUsername('');
+    localStorage.removeItem('calgeo_user');
   };
 
   const searchPlaces = async (query) => {
@@ -645,31 +674,34 @@ export default function CalGeo() {
           <CalGeoLogo size={34} />
           <span style={{ fontSize: '22px', fontWeight: '700', background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CalGeo</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {userTier === 'free' && <span style={{ fontSize: '10px', color: colors.muted }}>{MAX_FREE_ANALYSES - analysisCount} scans</span>}
-          <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#333', color: userTier === 'free' ? '#888' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</button>
-          <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '32px', height: '32px', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-            <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {isLoggedIn ? (
+            <span style={{ fontSize: '10px', color: colors.gold, fontWeight: '600' }}>👤 {username}</span>
+          ) : (
+            <button onClick={() => setShowLogin(true)} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.gold }}>Login</button>
+          )}
+          {userTier === 'free' && <span style={{ fontSize: '9px', color: colors.muted }}>{MAX_FREE_ANALYSES - analysisCount}</span>}
+          <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, padding: '4px 8px', fontSize: '9px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#333', color: userTier === 'free' ? '#888' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</button>
+          <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '28px', height: '28px', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+            <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
           </button>
         </div>
       </header>
 
       <main style={base.main}>
-        {/* TABS */}
-        <div style={{ display: 'flex', gap: '5px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {/* TABS - Condensed */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
           {[
             { id: 'gold', icon: '🥇', label: 'Gold', color: colors.gold },
+            { id: 'silver', icon: '⚪', label: 'Silver', color: '#c0c0c0' },
             { id: 'jade', icon: '💚', label: 'Jade', color: colors.jade },
             { id: 'scan', icon: '📸', label: 'Scan', color: colors.scan },
-            { id: 'map', icon: '🗺️', label: 'Map', color: '#ef4444' },
-            { id: 'list', icon: '🛒', label: 'Compare', color: colors.list },
-            { id: 'history', icon: '📜', label: 'History', color: colors.history },
-            { id: 'glossary', icon: '📖', label: 'Glossary', color: '#8b5cf6' },
+            { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6' },
             { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4' }
           ].map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ ...base.btn, padding: '9px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, whiteSpace: 'nowrap', fontSize: '12px' }}>{t.icon} {t.label}</button>
+            <button key={t.id} onClick={() => { setActiveTab(t.id); setShowBottomSidebar(null); }} style={{ ...base.btn, padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '70px' }}>{t.icon} {t.label}</button>
           ))}
         </div>
 
@@ -793,6 +825,72 @@ export default function CalGeo() {
                   </>
                 )}
                 <button onClick={() => addToHistory({ type: 'gold', grade: goldGrade.grade, pct: goldCalc.pct.toFixed(1), melt: goldCalc.melt.toFixed(2), price: goldCalc.preTax.toFixed(2), karat: chainKarat, style: chainStyle })} style={{ ...base.btn, width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ========== SILVER TAB ========== */}
+        {activeTab === 'silver' && (
+          <>
+            {/* Spot Price */}
+            <div style={{ ...base.card, background: `linear-gradient(135deg, #c0c0c012, #c0c0c005)`, border: `1px solid #c0c0c030` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Silver Spot Price</span>
+                <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <span style={{ color: '#c0c0c0', fontFamily: 'monospace', fontWeight: '700', fontSize: '26px' }}>${spotPriceSilver.toFixed(2)}</span>
+                  <span style={{ color: colors.muted, fontSize: '11px' }}>/g</span>
+                  {priceSource && (
+                    <div style={{ fontSize: '8px', color: colors.muted, marginTop: '2px' }}>
+                      Source: {priceSource === 'api' ? 'Silver API' : priceSource === 'cached' ? 'Cached' : priceSource}
+                    </div>
+                  )}
+                </div>
+                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, background: `linear-gradient(135deg, #c0c0c0, #a8a8a8)`, color: '#000', padding: '10px 14px' }}>{isRefreshing ? '⏳' : '🔄'}</button>
+              </div>
+            </div>
+
+            {/* Tax */}
+            <div style={base.card}>
+              <div style={base.grid2}>
+                <div><label style={base.label}>State</label><select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} style={base.select}>{Object.entries(stateTaxRates).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([code, d]) => <option key={code} value={code}>{d.name}</option>)}</select></div>
+                <div><label style={base.label}>Sales Tax</label><div style={{ padding: '10px', background: `#c0c0c015`, border: `1px solid #c0c0c030`, borderRadius: '8px', fontFamily: 'monospace', color: '#c0c0c0', textAlign: 'center' }}>{taxRate.toFixed(2)}%</div></div>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '12px', color: colors.muted, cursor: 'pointer' }}>
+                <input type="checkbox" checked={includeTax} onChange={(e) => setIncludeTax(e.target.checked)} /> Prices include sales tax
+              </label>
+            </div>
+
+            {/* Chain */}
+            <div style={base.card}>
+              <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: '#c0c0c0' }}>⛓️ Silver Chain</div>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
+                <div><label style={base.label}>Purity</label><select value={chainKarat} onChange={(e) => setChainKarat(e.target.value)} style={base.select}><option value="999">99.9% Pure</option><option value="925">Sterling (92.5%)</option><option value="900">Coin Silver (90%)</option></select></div>
+                <div><label style={base.label}>Style</label><select value={chainStyle} onChange={(e) => setChainStyle(e.target.value)} style={base.select}>{chainStyles.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+              </div>
+              <div style={base.grid3}>
+                <div><label style={base.label}>Metal</label><select value={chainMetal} onChange={(e) => setChainMetal(e.target.value)} style={base.select}>{metalCombos.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+                <div><label style={base.label}>Weight (g)</label><input type="number" value={chainWeight} onChange={(e) => setChainWeight(e.target.value)} placeholder="0.00" style={base.input} step="0.01" /></div>
+                <div><label style={base.label}>Price ($)</label><input type="number" value={chainPrice} onChange={(e) => setChainPrice(e.target.value)} placeholder="0.00" style={base.input} step="0.01" /></div>
+              </div>
+            </div>
+
+            {/* Results for Silver */}
+            {hasGoldInput && (
+              <div style={{ ...base.card, background: '#c0c0c010', border: `1px solid #c0c0c030` }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '42px', marginBottom: '4px' }}>⚪</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#c0c0c0' }}>SILVER</div>
+                  <div style={{ fontSize: '32px', fontWeight: '700', fontFamily: 'monospace', color: '#c0c0c0' }}>${(parseFloat(chainWeight) * spotPriceSilver || 0).toFixed(2)}</div>
+                  <div style={{ fontSize: '11px', color: colors.muted }}>melt value</div>
+                </div>
+                <div style={{ fontSize: '11px', color: colors.muted, textAlign: 'center', marginBottom: '12px' }}>
+                  Silver valuation coming soon. Current display shows melt value only.
+                </div>
+                <button onClick={() => addToHistory({ type: 'silver', melt: (parseFloat(chainWeight) * spotPriceSilver).toFixed(2), price: chainPrice, weight: chainWeight })} style={{ ...base.btn, width: '100%', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
               </div>
             )}
           </>
@@ -1240,6 +1338,150 @@ export default function CalGeo() {
         </div>
       </main>
 
+      {/* BOTTOM LEFT SIDEBAR */}
+      <div style={{ position: 'fixed', bottom: '20px', left: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 50 }}>
+        {[
+          { id: 'history', icon: '📜', label: 'History', color: colors.history },
+          { id: 'compare', icon: '🛒', label: 'Compare', color: colors.list },
+          { id: 'map', icon: '🗺️', label: 'Map', color: '#ef4444' }
+        ].map(item => (
+          <button
+            key={item.id}
+            onClick={() => setShowBottomSidebar(showBottomSidebar === item.id ? null : item.id)}
+            style={{
+              ...base.btn,
+              width: '52px',
+              height: '52px',
+              borderRadius: '50%',
+              background: showBottomSidebar === item.id ? item.color : 'rgba(255,255,255,0.08)',
+              border: `2px solid ${showBottomSidebar === item.id ? item.color : colors.border}`,
+              fontSize: '20px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {item.icon}
+          </button>
+        ))}
+        {/* CRM Support for Free Tier */}
+        {userTier === 'free' && (
+          <button
+            onClick={() => window.open('mailto:support@marketsavage.com?subject=CalGeo Support Request', '_blank')}
+            style={{
+              ...base.btn,
+              width: '52px',
+              height: '52px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.08)',
+              border: `2px solid ${colors.border}`,
+              fontSize: '20px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: '10px'
+            }}
+            title="Contact Support"
+          >
+            💬
+          </button>
+        )}
+      </div>
+
+      {/* BOTTOM SIDEBAR PANELS */}
+      {showBottomSidebar && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxHeight: '70vh', background: '#0c0c12', borderTop: `2px solid ${colors.gold}40`, padding: '20px', overflowY: 'auto', zIndex: 60, boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: colors.gold }}>
+              {showBottomSidebar === 'history' && '📜 History'}
+              {showBottomSidebar === 'compare' && '🛒 Price Comparison'}
+              {showBottomSidebar === 'map' && '🗺️ Nearby Shops'}
+            </div>
+            <button onClick={() => setShowBottomSidebar(null)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
+          </div>
+
+          {/* History Content */}
+          {showBottomSidebar === 'history' && (
+            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+              {history.length > 0 ? history.slice(0, 10).map((e) => (
+                <div key={e.id} style={{ ...base.card, marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '9px', color: colors.muted }}>{e.timestamp}</span>
+                    <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '8px', background: e.type === 'gold' ? `${colors.gold}20` : e.type === 'silver' ? `#c0c0c020` : e.type === 'jade' ? `${colors.jade}20` : `${colors.scan}20`, color: e.type === 'gold' ? colors.gold : e.type === 'silver' ? '#c0c0c0' : e.type === 'jade' ? colors.jade : colors.scan, fontWeight: '600' }}>{e.type?.toUpperCase()}</span>
+                  </div>
+                  {e.grade && <div style={{ fontSize: '13px', fontWeight: '600', color: e.grade === 'STEAL' || e.grade === 'GOOD' ? colors.success : e.grade === 'FAIR' ? colors.warning : colors.danger }}>{e.grade}</div>}
+                  <div style={{ fontSize: '10px', color: colors.muted }}>{e.pct && `${e.pct}% markup`}{e.ratio && ` • ${e.ratio}% ratio`}{e.price && ` • $${e.price}`}</div>
+                </div>
+              )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>📜 No history yet</div>}
+            </div>
+          )}
+
+          {/* Compare Content */}
+          {showBottomSidebar === 'compare' && (
+            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+              {shoppingList.length > 0 ? shoppingList.sort((a, b) => a.price - b.price).map((item, idx) => (
+                <div key={item.id} style={{ ...base.card, marginBottom: '8px', border: idx === 0 ? `1px solid ${colors.success}50` : undefined }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div><div style={{ fontWeight: '600', fontSize: '13px' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '10px', color: colors.muted }}>{item.item}</div></div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
+                  </div>
+                </div>
+              )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>🛒 Add shop quotes to compare</div>}
+            </div>
+          )}
+
+          {/* Map Content */}
+          {showBottomSidebar === 'map' && (
+            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+              <div
+                ref={mapContainerRef}
+                style={{
+                  width: '100%',
+                  height: '300px',
+                  borderRadius: '14px',
+                  overflow: 'hidden',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '10px'
+                }}
+              />
+              <div style={{ fontSize: '11px', color: colors.muted, textAlign: 'center' }}>
+                {mapLoaded ? 'Tap markers to view shop details' : 'Loading map...'}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* LOGIN MODAL */}
+      {showLogin && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowLogin(false)}>
+          <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '340px', width: '100%', border: `1px solid ${colors.gold}30` }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔐</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>Login to CalGeo</div>
+              <div style={{ fontSize: '11px', color: colors.muted, marginTop: '4px' }}>Premium users only</div>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleLogin(e.target.username.value, e.target.password.value); }}>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ ...base.label, marginBottom: '6px' }}>Username</label>
+                <input name="username" type="text" required style={base.input} placeholder="Enter username" />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ ...base.label, marginBottom: '6px' }}>Password</label>
+                <input name="password" type="password" required style={base.input} placeholder="Enter password" />
+              </div>
+              <button type="submit" style={{ ...base.btn, ...base.btnGold, width: '100%', marginBottom: '8px' }}>Login</button>
+              <button type="button" onClick={() => setShowLogin(false)} style={{ ...base.btn, width: '100%', background: 'rgba(255,255,255,0.05)', color: colors.muted, border: `1px solid ${colors.border}` }}>Cancel</button>
+            </form>
+            <div style={{ fontSize: '9px', color: colors.muted, textAlign: 'center', marginTop: '12px' }}>
+              Pro/Expert tier required • Contact support@marketsavage.com
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* UPGRADE MODAL */}
       {showUpgrade && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowUpgrade(false)}>
@@ -1284,10 +1526,16 @@ export default function CalGeo() {
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Account</div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
+                {isLoggedIn && <div style={{ fontSize: '11px', color: colors.gold, marginBottom: '8px', fontWeight: '600' }}>👤 {username}</div>}
                 <div style={{ fontSize: '12px', color: colors.muted, marginBottom: '4px' }}>Current Tier</div>
                 <div style={{ fontSize: '16px', fontWeight: '600', color: userTier === 'expert' ? colors.gold : userTier === 'pro' ? '#3b82f6' : '#888', textTransform: 'uppercase' }}>{userTier}</div>
                 {userTier !== 'expert' && <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>{userTier === 'free' ? `${MAX_FREE_ANALYSES - analysisCount} scans remaining` : `${50 - analysisCount} scans remaining`}</div>}
               </div>
+              {isLoggedIn ? (
+                <button onClick={() => { handleLogout(); setShowMenu(false); }} style={{ ...base.btn, width: '100%', marginTop: '8px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px' }}>🚪 Logout</button>
+              ) : (
+                <button onClick={() => { setShowMenu(false); setShowLogin(true); }} style={{ ...base.btn, width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
+              )}
             </div>
 
             <div style={{ marginBottom: '20px' }}>
