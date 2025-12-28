@@ -1574,9 +1574,9 @@ export default function CalGeo() {
                 }}
               >
                 <option value="">No Sales Tax</option>
-                {Object.keys(STATE_TAX_RATES).map(state => (
-                  <option key={state} value={state}>
-                    {state} ({(STATE_TAX_RATES[state] * 100).toFixed(2)}% tax)
+                {Object.entries(stateTaxRates).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([code, data]) => (
+                  <option key={code} value={code}>
+                    {data.name} ({data.rate.toFixed(2)}% tax)
                   </option>
                 ))}
               </select>
