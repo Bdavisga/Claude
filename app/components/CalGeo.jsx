@@ -1,6 +1,17 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import {
+  TIER_CONFIG,
+  PaywallModal,
+  LockedOverlay,
+  ScanCounter,
+  hasFeature,
+  canUseScan,
+  getScansRemaining,
+  isJadeColorLocked,
+  initiateCheckout
+} from './paywall-system';
 
 // ============================================================
 // CALGEO v1.2 - Production Ready
@@ -45,6 +56,22 @@ export default function CalGeo() {
   const [showAbout, setShowAbout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [theme, setTheme] = useState('dark'); // 'dark', 'light', 'system'
+
+  // Paywall
+  const [scanCount, setScanCount] = useState(0);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState(null);
+  const [userId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      let id = localStorage.getItem('calgeo_uid');
+      if (!id) {
+        id = 'user_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('calgeo_uid', id);
+      }
+      return id;
+    }
+    return 'anon';
+  });
 
   // Spot Price
   const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
@@ -170,6 +197,34 @@ export default function CalGeo() {
   useEffect(() => {
     try { localStorage.setItem('calgeo_state', selectedState); } catch (e) {}
   }, [selectedState]);
+
+  // Load saved tier and scan count on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('calgeo_tier');
+    const scans = localStorage.getItem('calgeo_scans');
+    if (saved) setUserTier(saved);
+    if (scans) setScanCount(parseInt(scans));
+
+    // Check URL for successful upgrade
+    const params = new URLSearchParams(window.location.search);
+    const upgraded = params.get('upgraded');
+    if (upgraded) {
+      setUserTier(upgraded);
+      localStorage.setItem('calgeo_tier', upgraded);
+      setScanCount(0);
+      localStorage.setItem('calgeo_scans', '0');
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
+  // Persist tier and scan count
+  useEffect(() => {
+    try { localStorage.setItem('calgeo_tier', userTier); } catch (e) {}
+  }, [userTier]);
+
+  useEffect(() => {
+    try { localStorage.setItem('calgeo_scans', scanCount.toString()); } catch (e) {}
+  }, [scanCount]);
 
   // ==================== CONFIG DATA ====================
   const stateTaxRates = {
@@ -1644,6 +1699,16 @@ export default function CalGeo() {
           </div>
         </div>
       )}
+
+      {/* PAYWALL MODAL */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature={paywallFeature}
+        currentTier={userTier}
+        scansRemaining={getScansRemaining(userTier, scanCount)}
+        onUpgrade={(tier) => initiateCheckout(tier, userId)}
+      />
     </div>
   );
 }
