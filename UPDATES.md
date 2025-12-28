@@ -1,6 +1,24 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** December 28, 2025 - 4:30 PM EST
+**Last Updated:** December 28, 2025 - 5:00 PM EST
+
+---
+
+## 🔧 December 28, 2025 - Fixed Upgrade Modal Stripe Integration
+
+### **Connected Upgrade Modal to Stripe Checkout**
+- **Problem:** Upgrade modal was using mock/demo tier switching (no payment)
+- **Fix:** Replaced old modal with Stripe checkout integration
+- **Changes:**
+  - Pro/Expert buttons now call `initiateCheckout()` function
+  - Properly redirects to Stripe checkout session
+  - Shows current tier in upgrade modal
+  - Added console logging for debugging
+- **Testing:** Click Menu → Upgrade Tier → Select Pro or Expert → Redirects to Stripe
+- **Impact:** Users can now actually purchase subscriptions through Stripe
+
+**Files Modified:** 2 (CalGeo.jsx, paywall-system.jsx)
+**Lines Changed:** +58 -11
 
 ---
 
