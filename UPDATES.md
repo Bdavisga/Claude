@@ -1,10 +1,10 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** December 28, 2025 - 3:30 PM EST
+**Last Updated:** December 28, 2025 - 4:00 PM EST
 
 ---
 
-## 🔧 December 28, 2025 - Critical Build Fix
+## 🔧 December 28, 2025 - Critical Build Fix & Environment Setup
 
 ### **Fixed Stripe Build Error**
 - **Problem:** Build failing with `"Neither apiKey nor config.authenticator provided"`
@@ -19,8 +19,19 @@
   - Return proper error if Stripe not configured
 - **Impact:** Build now succeeds without Stripe env vars, Stripe initializes properly at runtime
 
-**Files Modified:** 2
-**Lines Changed:** +12 -4
+### **Environment Configuration**
+- **Added `.env.example`** - Template for required environment variables
+  - Includes all 6 Stripe variables with documentation
+  - Links to Stripe Dashboard for setup
+  - Safe to commit (no actual keys)
+- **Created `.env.local`** - Local development environment (gitignored)
+  - Pre-configured with test mode API keys
+  - Placeholders for Price IDs and Webhook Secret
+  - Dev server automatically detects and loads
+
+**Files Modified:** 3 (2 API routes + 1 new example file)
+**Files Created:** 2 (.env.example, .env.local)
+**Lines Changed:** +35 -4
 
 ---
 
