@@ -1049,7 +1049,7 @@ export default function CalGeo() {
             {/* History Sub-Tab */}
             {toolsSubTab === 'history' && (
               <>
-                {history.length > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}><span style={{ fontSize: '11px', color: colors.muted }}>{history.length} entries</span><button onClick={() => setHistory([])} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)' }}>Clear All</button></div>}
+                {history.length > 0 && <div style={{ marginBottom: '10px' }}><span style={{ fontSize: '11px', color: colors.muted }}>{history.length} entries</span></div>}
                 {history.length > 0 ? history.map((e) => (
                   <div key={e.id} style={base.card}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -1058,7 +1058,6 @@ export default function CalGeo() {
                     </div>
                     {e.grade && <div style={{ fontSize: '15px', fontWeight: '600', color: e.grade === 'STEAL' || e.grade === 'GOOD' ? colors.success : e.grade === 'FAIR' ? colors.warning : colors.danger }}>{e.grade}</div>}
                     <div style={{ fontSize: '11px', color: colors.muted }}>{e.pct && `${e.pct}% markup`}{e.ratio && ` • ${e.ratio}% ratio`}{e.price && ` • $${e.price}`}</div>
-                    <button onClick={() => setHistory(prev => prev.filter(i => i.id !== e.id))} style={{ fontSize: '10px', color: colors.muted, background: 'none', border: 'none', cursor: 'pointer', marginTop: '4px' }}>🗑️</button>
                   </div>
                 )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>📜 No history yet</div>}
               </>
@@ -1112,7 +1111,6 @@ export default function CalGeo() {
                       <div><div style={{ fontWeight: '600' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '11px', color: colors.muted }}>{item.item}</div></div>
                       <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
                     </div>
-                    <button onClick={() => setShoppingList(prev => prev.filter(i => i.id !== item.id))} style={{ fontSize: '10px', color: colors.danger, background: 'none', border: 'none', cursor: 'pointer', marginTop: '6px' }}>🗑️ Remove</button>
                   </div>
                 )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>🛒 Add shop quotes to compare</div>}
               </>
