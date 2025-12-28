@@ -1608,10 +1608,10 @@ export default function CalGeo() {
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
               {[
                 { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
-                { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
-                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
-                { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
                 { label: '🔧 Tools', action: () => { setActiveTab('tools'); setShowMenu(false); } },
+                { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
+                { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
+                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
                 { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } },
                 { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } }
               ].map((item, idx) => (
@@ -1632,18 +1632,6 @@ export default function CalGeo() {
               ) : (
                 <button onClick={() => { setShowMenu(false); setShowLogin(true); }} style={{ ...base.btn, width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
               )}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Settings</div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
-                <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                  <span style={{ color: colors.muted }}>State:</span> <span style={{ color: colors.text, fontWeight: '600' }}>{stateTaxRates[selectedState]?.name}</span>
-                </div>
-                <div style={{ fontSize: '12px' }}>
-                  <span style={{ color: colors.muted }}>Tax Rate:</span> <span style={{ color: colors.gold, fontWeight: '600' }}>{taxRate.toFixed(2)}%</span>
-                </div>
-              </div>
             </div>
 
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '16px' }}>
