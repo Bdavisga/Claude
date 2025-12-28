@@ -43,6 +43,7 @@ export default function CalGeo() {
   const MAX_FREE_ANALYSES = 3;
   const [toolsSubTab, setToolsSubTab] = useState('history'); // 'history', 'compare', 'map'
   const [showAbout, setShowAbout] = useState(false);
+  const [theme, setTheme] = useState('dark'); // 'dark', 'light', 'system'
 
   // Spot Price
   const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
@@ -113,11 +114,13 @@ export default function CalGeo() {
       const a = localStorage.getItem('calgeo_analyses');
       const st = localStorage.getItem('calgeo_state');
       const u = localStorage.getItem('calgeo_user');
+      const th = localStorage.getItem('calgeo_theme');
       if (h) setHistory(JSON.parse(h));
       if (s) setShoppingList(JSON.parse(s));
       if (t) setUserTier(t);
       if (a) setAnalysisCount(parseInt(a) || 0);
       if (st) setSelectedState(st);
+      if (th) setTheme(th);
       if (u) {
         const userData = JSON.parse(u);
         setIsLoggedIn(true);
@@ -129,6 +132,19 @@ export default function CalGeo() {
     loadGoogleMaps();
     getUserLocation();
   }, []);
+
+  // Handle system theme detection
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => {
+        // Trigger re-render by updating a dummy state value
+        setTheme('system');
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [theme]);
 
   // Initialize map when tools tab opens to map or when map loads
   useEffect(() => {
@@ -651,24 +667,48 @@ export default function CalGeo() {
   const bestDeal = getBestDeal();
 
   // ==================== STYLES ====================
-  const colors = {
-    bg: '#07070a', bgCard: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)',
-    gold: '#d4af37', jade: '#10b981', scan: '#8b5cf6', list: '#f59e0b', history: '#6366f1',
-    text: '#f0f0f0', muted: '#666', success: '#22c55e', warning: '#f59e0b', danger: '#ef4444'
+  // Theme-aware colors inspired by One app
+  const getColors = () => {
+    // Determine effective theme
+    let effectiveTheme = theme;
+    if (theme === 'system') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    if (effectiveTheme === 'light') {
+      return {
+        bg: '#f5f5f5', bgCard: '#ffffff', border: 'rgba(0,0,0,0.12)',
+        gold: '#c69f40', jade: '#059669', scan: '#7c3aed', list: '#ea580c', history: '#4f46e5',
+        text: '#0a0a0a', muted: '#666666', success: '#16a34a', warning: '#ea580c', danger: '#dc2626',
+        cardShadow: '0 1px 3px rgba(0,0,0,0.08)',
+        inputBg: '#fafafa', inputBorder: 'rgba(0,0,0,0.15)'
+      };
+    }
+    // Dark mode (default) - inspired by One app
+    return {
+      bg: '#0a0a0a', bgCard: '#1a1a1a', border: 'rgba(255,255,255,0.15)',
+      gold: '#e5c158', jade: '#10b981', scan: '#a78bfa', list: '#fb923c', history: '#818cf8',
+      text: '#ffffff', muted: '#9ca3af', success: '#22c55e', warning: '#fb923c', danger: '#ef4444',
+      cardShadow: '0 1px 3px rgba(0,0,0,0.3)',
+      inputBg: 'rgba(0,0,0,0.3)', inputBorder: 'rgba(255,255,255,0.2)'
+    };
   };
 
+  const colors = getColors();
+  const effectiveTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+
   const base = {
-    container: { minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bg} 0%, #0d0d12 100%)`, color: colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', WebkitFontSmoothing: 'antialiased' },
-    header: { background: 'rgba(12,12,18,0.95)', borderBottom: `1px solid ${colors.gold}30`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' },
+    container: { minHeight: '100vh', background: colors.bg, color: colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', WebkitFontSmoothing: 'antialiased' },
+    header: { background: effectiveTheme === 'light' ? '#ffffff' : 'rgba(15,15,15,0.98)', borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', boxShadow: colors.cardShadow },
     main: { maxWidth: '480px', margin: '0 auto', padding: '12px 14px 100px' },
-    card: { background: colors.bgCard, borderRadius: '14px', border: `1px solid ${colors.border}`, padding: '14px', marginBottom: '10px' },
-    label: { display: 'block', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: colors.muted, marginBottom: '5px' },
-    select: { width: '100%', padding: '10px', background: 'rgba(0,0,0,0.4)', border: `1px solid ${colors.border}`, borderRadius: '8px', color: '#fff', fontSize: '13px', outline: 'none' },
-    input: { width: '100%', padding: '10px', background: 'rgba(0,0,0,0.4)', border: `1px solid ${colors.border}`, borderRadius: '8px', color: '#fff', fontSize: '14px', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' },
-    btn: { padding: '10px 16px', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' },
-    btnGold: { background: `linear-gradient(135deg, ${colors.gold} 0%, #b8960c 100%)`, color: '#000' },
-    grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
-    grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' },
+    card: { background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '16px', marginBottom: '12px', boxShadow: colors.cardShadow },
+    label: { display: 'block', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: colors.muted, marginBottom: '6px' },
+    select: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', fontWeight: '500' },
+    input: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '15px', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box', fontWeight: '600' },
+    btn: { padding: '12px 18px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' },
+    btnGold: { background: `linear-gradient(135deg, ${colors.gold} 0%, ${effectiveTheme === 'light' ? '#b8960c' : '#c9a947'} 100%)`, color: effectiveTheme === 'light' ? '#000' : '#0a0a0a' },
+    grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+    grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' },
   };
 
   // ==================== RENDER ====================
@@ -688,6 +728,9 @@ export default function CalGeo() {
           )}
           {userTier === 'free' && <span style={{ fontSize: '9px', color: colors.muted }}>{MAX_FREE_ANALYSES - analysisCount}</span>}
           <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, padding: '4px 8px', fontSize: '9px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#333', color: userTier === 'free' ? '#888' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</button>
+          <button onClick={() => { const next = theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark'; setTheme(next); localStorage.setItem('calgeo_theme', next); }} style={{ ...base.btn, padding: '6px 8px', fontSize: '16px', background: effectiveTheme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)', border: `1px solid ${colors.border}` }} title={`Theme: ${theme}`}>
+            {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '💻'}
+          </button>
           <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '28px', height: '28px', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
             <div style={{ width: '14px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
@@ -721,8 +764,8 @@ export default function CalGeo() {
                 <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Spot Price</span>
                 <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} style={{ ...base.select, width: '90px', flex: 'none' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} style={{ ...base.select, minWidth: '125px', flex: 'none' }}>
                   {karatOptions.map(o => <option key={o.value} value={o.value}>{o.label} ({o.desc})</option>)}
                 </select>
                 <div style={{ flex: 1, textAlign: 'center' }}>
