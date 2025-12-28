@@ -32,6 +32,9 @@ yarn-error.log*
 # env files (can opt-in for commiting if needed)
 .env*
 
+# Local Stripe configuration (contains secrets)
+VERCEL_ENV_VARS.md
+
 # vercel
 .vercel
 
