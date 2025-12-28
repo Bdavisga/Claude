@@ -698,14 +698,14 @@ export default function CalGeo() {
   const effectiveTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
 
   const base = {
-    container: { minHeight: '100vh', background: colors.bg, color: colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', WebkitFontSmoothing: 'antialiased' },
+    container: { minHeight: '100vh', background: colors.bg, color: colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', WebkitFontSmoothing: 'antialiased', width: '100%', overflow: 'hidden' },
     header: { background: effectiveTheme === 'light' ? '#ffffff' : 'rgba(15,15,15,0.98)', borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', boxShadow: colors.cardShadow },
-    main: { maxWidth: '480px', margin: '0 auto', padding: '12px 14px 100px' },
-    card: { background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '16px', marginBottom: '12px', boxShadow: colors.cardShadow },
+    main: { width: '100%', maxWidth: '100vw', margin: '0', padding: '12px 16px 100px', boxSizing: 'border-box' },
+    card: { background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '16px', marginBottom: '12px', boxShadow: colors.cardShadow, boxSizing: 'border-box' },
     label: { display: 'block', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: colors.muted, marginBottom: '6px' },
-    select: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', fontWeight: '500' },
+    select: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', fontWeight: '500', boxSizing: 'border-box' },
     input: { width: '100%', padding: '11px 12px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.text, fontSize: '15px', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box', fontWeight: '600' },
-    btn: { padding: '12px 18px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' },
+    btn: { padding: '12px 18px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box' },
     btnGold: { background: `linear-gradient(135deg, ${colors.gold} 0%, ${effectiveTheme === 'light' ? '#b8960c' : '#c9a947'} 100%)`, color: effectiveTheme === 'light' ? '#000' : '#0a0a0a' },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
     grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' },

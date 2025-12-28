@@ -2,63 +2,64 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Try to fetch from free metals API
-    const response = await fetch('https://api.metals.dev/v1/latest?api_key=demo&currency=USD&unit=g');
+    // Try goldprice.org free API (no key required, real-time prices)
+    const response = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
 
     if (response.ok) {
       const data = await response.json();
 
-      // Extract gold and silver prices per gram
-      const goldPerGram = data?.metals?.gold || null;
-      const silverPerGram = data?.metals?.silver || null;
+      // goldprice.org returns price per troy ounce
+      // Convert to price per gram (1 troy oz = 31.1035 grams)
+      if (data?.items) {
+        const goldData = data.items.find(item => item.curr === 'XAU');
+        const silverData = data.items.find(item => item.curr === 'XAG');
 
-      if (goldPerGram) {
+        if (goldData?.xauPrice) {
+          const goldPerGram = goldData.xauPrice / 31.1035;
+          const silverPerGram = silverData?.xagPrice ? silverData.xagPrice / 31.1035 : 1.02;
+
+          return NextResponse.json({
+            price_per_gram: parseFloat(goldPerGram.toFixed(2)),
+            silver_per_gram: parseFloat(silverPerGram.toFixed(2)),
+            source: 'goldprice.org',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('GoldPrice.org API error:', error);
+  }
+
+  // Try alternative: frankfurter.app for currency rates
+  try {
+    // This API provides XAU (gold) rates against USD
+    const response = await fetch('https://api.frankfurter.app/latest?from=XAU&to=USD');
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Frankfurter gives us USD per troy ounce of gold
+      if (data?.rates?.USD) {
+        const pricePerOz = data.rates.USD;
+        const goldPerGram = pricePerOz / 31.1035;
+
         return NextResponse.json({
           price_per_gram: parseFloat(goldPerGram.toFixed(2)),
-          silver_per_gram: silverPerGram ? parseFloat(silverPerGram.toFixed(2)) : 0.98,
-          source: 'metals.dev',
+          silver_per_gram: 1.02, // Approximate current silver price per gram
+          source: 'frankfurter.app',
           timestamp: new Date().toISOString(),
         });
       }
     }
   } catch (error) {
-    console.error('Metals API error:', error);
+    console.error('Frankfurter API error:', error);
   }
 
-  // Try alternative free API
-  try {
-    const response = await fetch('https://api.metalpriceapi.com/v1/latest?api_key=demo&base=USD&currencies=XAU,XAG');
-
-    if (response.ok) {
-      const data = await response.json();
-
-      // These APIs return price of 1 USD in troy oz of gold/silver
-      // We need to invert and convert to grams
-      if (data?.rates?.XAU) {
-        const ozPerDollar = data.rates.XAU;
-        const pricePerOz = 1 / ozPerDollar;
-        const pricePerGram = pricePerOz / 31.1035;
-
-        const silverPricePerGram = data?.rates?.XAG
-          ? (1 / data.rates.XAG) / 31.1035
-          : 0.98;
-
-        return NextResponse.json({
-          price_per_gram: parseFloat(pricePerGram.toFixed(2)),
-          silver_per_gram: parseFloat(silverPricePerGram.toFixed(2)),
-          source: 'metalpriceapi',
-          timestamp: new Date().toISOString(),
-        });
-      }
-    }
-  } catch (error) {
-    console.error('MetalPrice API error:', error);
-  }
-
-  // Fallback to cached/default prices (current market estimate)
+  // Fallback to current market prices (updated Dec 2024)
   return NextResponse.json({
-    price_per_gram: 84.20, // Default gold price per gram (~$2600/oz)
-    silver_per_gram: 0.98,  // Default silver price per gram (~$30/oz)
+    price_per_gram: 85.50, // Current gold ~$2660/oz = $85.50/gram
+    silver_per_gram: 1.02,  // Current silver ~$31.50/oz = $1.02/gram
     source: 'cached',
     timestamp: new Date().toISOString(),
   });
