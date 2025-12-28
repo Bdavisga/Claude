@@ -41,7 +41,8 @@ export default function CalGeo() {
   const [username, setUsername] = useState('');
   const [analysisCount, setAnalysisCount] = useState(0);
   const MAX_FREE_ANALYSES = 3;
-  const [showBottomSidebar, setShowBottomSidebar] = useState(null); // 'history', 'compare', 'map', or null
+  const [toolsSubTab, setToolsSubTab] = useState('history'); // 'history', 'compare', 'map'
+  const [showAbout, setShowAbout] = useState(false);
 
   // Spot Price
   const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
@@ -129,12 +130,17 @@ export default function CalGeo() {
     getUserLocation();
   }, []);
 
-  // Initialize map when tab changes to map
+  // Initialize map when tools tab opens to map or when map loads
   useEffect(() => {
-    if (activeTab === 'map' && mapLoaded && mapContainerRef.current && !map) {
-      initializeMap();
+    if (activeTab === 'tools' && toolsSubTab === 'map' && mapLoaded && mapContainerRef.current && !map) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (mapContainerRef.current) {
+          initializeMap();
+        }
+      }, 100);
     }
-  }, [activeTab, mapLoaded, map]);
+  }, [activeTab, toolsSubTab, mapLoaded]);
 
   useEffect(() => {
     try { localStorage.setItem('calgeo_history', JSON.stringify(history)); } catch (e) {}
@@ -698,10 +704,11 @@ export default function CalGeo() {
             { id: 'silver', icon: '⚪', label: 'Silver', color: '#c0c0c0' },
             { id: 'jade', icon: '💚', label: 'Jade', color: colors.jade },
             { id: 'scan', icon: '📸', label: 'Scan', color: colors.scan },
+            { id: 'tools', icon: '🔧', label: 'Tools', color: '#f59e0b' },
             { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6' },
             { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4' }
           ].map(t => (
-            <button key={t.id} onClick={() => { setActiveTab(t.id); setShowBottomSidebar(null); }} style={{ ...base.btn, padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '70px' }}>{t.icon} {t.label}</button>
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ ...base.btn, padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '60px' }}>{t.icon} {t.label}</button>
           ))}
         </div>
 
@@ -1010,149 +1017,180 @@ export default function CalGeo() {
           </>
         )}
 
-        {/* ========== MAP TAB ========== */}
-        {activeTab === 'map' && (
+        {/* ========== TOOLS TAB ========== */}
+        {activeTab === 'tools' && (
           <>
-            <div style={{ ...base.card, background: 'linear-gradient(135deg, #ef444410, #ef444405)', border: '1px solid #ef444430' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>🗺️ Find Nearby Jewelry Shops</div>
-              <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '12px' }}>
-                {mapLoaded ? 'Search for gold and jade dealers near you' : 'Loading map...'}
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <input
-                  type="text"
-                  value={mapSearchQuery}
-                  onChange={(e) => setMapSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchNearbyJewelry()}
-                  placeholder="Search: gold dealers, jade shops..."
-                  style={base.input}
-                />
-              </div>
-              <button
-                onClick={searchNearbyJewelry}
-                disabled={!mapLoaded || !map}
-                style={{ ...base.btn, ...base.btnGold, width: '100%' }}
-              >
-                🔍 Search Nearby
-              </button>
+            {/* Tools Sub-Tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {[
+                { id: 'history', icon: '📜', label: 'History' },
+                { id: 'compare', icon: '🛒', label: 'Compare' },
+                { id: 'map', icon: '🗺️', label: 'Map' }
+              ].map(sub => (
+                <button
+                  key={sub.id}
+                  onClick={() => setToolsSubTab(sub.id)}
+                  style={{
+                    ...base.btn,
+                    flex: 1,
+                    padding: '10px',
+                    background: toolsSubTab === sub.id ? '#f59e0b25' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${toolsSubTab === sub.id ? '#f59e0b' : colors.border}`,
+                    color: toolsSubTab === sub.id ? '#f59e0b' : colors.muted,
+                    fontSize: '13px',
+                    fontWeight: toolsSubTab === sub.id ? '600' : '400'
+                  }}
+                >
+                  {sub.icon} {sub.label}
+                </button>
+              ))}
             </div>
 
-            {!mapLoaded ? (
-              <div style={{ ...base.card, textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: '32px', marginBottom: '10px' }}>⏳</div>
-                <div style={{ color: colors.muted }}>Loading Google Maps...</div>
-                <div style={{ fontSize: '10px', color: colors.muted, marginTop: '8px' }}>
-                  Requires Google Maps API key
-                </div>
-              </div>
-            ) : (
+            {/* History Sub-Tab */}
+            {toolsSubTab === 'history' && (
               <>
-                <div
-                  ref={mapContainerRef}
-                  style={{
-                    width: '100%',
-                    height: '400px',
-                    borderRadius: '14px',
-                    overflow: 'hidden',
-                    border: `1px solid ${colors.border}`,
-                    marginBottom: '10px'
-                  }}
-                />
+                {history.length > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}><span style={{ fontSize: '11px', color: colors.muted }}>{history.length} entries</span><button onClick={() => setHistory([])} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)' }}>Clear All</button></div>}
+                {history.length > 0 ? history.map((e) => (
+                  <div key={e.id} style={base.card}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '10px', color: colors.muted }}>{e.timestamp}</span>
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: e.type === 'gold' ? `${colors.gold}20` : e.type === 'jade' ? `${colors.jade}20` : `${colors.scan}20`, color: e.type === 'gold' ? colors.gold : e.type === 'jade' ? colors.jade : colors.scan, fontWeight: '600' }}>{e.type?.toUpperCase()}</span>
+                    </div>
+                    {e.grade && <div style={{ fontSize: '15px', fontWeight: '600', color: e.grade === 'STEAL' || e.grade === 'GOOD' ? colors.success : e.grade === 'FAIR' ? colors.warning : colors.danger }}>{e.grade}</div>}
+                    <div style={{ fontSize: '11px', color: colors.muted }}>{e.pct && `${e.pct}% markup`}{e.ratio && ` • ${e.ratio}% ratio`}{e.price && ` • $${e.price}`}</div>
+                    <button onClick={() => setHistory(prev => prev.filter(i => i.id !== e.id))} style={{ fontSize: '10px', color: colors.muted, background: 'none', border: 'none', cursor: 'pointer', marginTop: '4px' }}>🗑️</button>
+                  </div>
+                )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>📜 No history yet</div>}
+              </>
+            )}
 
+            {/* Compare Sub-Tab */}
+            {toolsSubTab === 'compare' && (
+              <>
                 <div style={base.card}>
-                  <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '8px' }}>💡 Tips:</div>
-                  <ul style={{ fontSize: '11px', color: colors.muted, margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
-                    <li>Tap markers to see shop details</li>
-                    <li>Blue marker shows your location</li>
-                    <li>Gold diamond markers are jewelry stores</li>
-                    <li>Search radius: 5km / 3 miles</li>
-                  </ul>
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.list }}>🛒 Price Comparison</div>
+                  {!showAddShop ? (
+                    <button onClick={() => setShowAddShop(true)} style={{ ...base.btn, ...base.btnGold, width: '100%' }}>➕ Add Shop Quote</button>
+                  ) : (
+                    <>
+                      <div style={{ marginBottom: '10px', position: 'relative' }}>
+                        <label style={base.label}>Search Business</label>
+                        <input type="text" value={placeSearch} onChange={(e) => { setPlaceSearch(e.target.value); searchPlaces(e.target.value); }} placeholder="Search jewelry shops..." style={base.input} />
+                        {placeResults.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a24', border: `1px solid ${colors.border}`, borderRadius: '8px', marginTop: '4px', zIndex: 10, maxHeight: '150px', overflow: 'auto' }}>
+                            {placeResults.map((p) => (
+                              <div key={p.placeId} onClick={() => selectPlace(p)} style={{ padding: '10px', cursor: 'pointer', borderBottom: `1px solid ${colors.border}` }}>
+                                <div style={{ fontWeight: '500', fontSize: '13px' }}>{p.name}</div>
+                                <div style={{ fontSize: '10px', color: colors.muted }}>{p.address}</div>
+                                {p.rating && <div style={{ fontSize: '10px', color: colors.list }}>⭐ {p.rating}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ ...base.grid2, marginBottom: '10px' }}>
+                        <div><label style={base.label}>Shop Name</label><input type="text" value={newShop.name} onChange={(e) => setNewShop({ ...newShop, name: e.target.value })} style={base.input} /></div>
+                        <div><label style={base.label}>Price ($)</label><input type="number" value={newShop.price} onChange={(e) => setNewShop({ ...newShop, price: e.target.value })} style={base.input} /></div>
+                      </div>
+                      <div style={{ marginBottom: '10px' }}><label style={base.label}>Item Description</label><input type="text" value={newShop.item} onChange={(e) => setNewShop({ ...newShop, item: e.target.value })} placeholder="24K Cuban 10g" style={base.input} /></div>
+                      <div style={base.grid2}>
+                        <button onClick={() => { setShowAddShop(false); setNewShop({ name: '', address: '', item: '', price: '', notes: '', rating: '' }); }} style={{ ...base.btn, background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>Cancel</button>
+                        <button onClick={addToShoppingList} style={{ ...base.btn, ...base.btnGold }}>Add</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {bestDeal && shoppingList.length > 1 && (
+                  <div style={{ background: `linear-gradient(90deg, ${colors.success}15, ${colors.success}08)`, border: `1px solid ${colors.success}40`, borderRadius: '12px', padding: '12px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div><div style={{ fontSize: '10px', color: colors.success, fontWeight: '600' }}>🏆 BEST DEAL</div><div style={{ fontWeight: '600' }}>{bestDeal.name}</div></div>
+                    <div style={{ fontSize: '22px', fontWeight: '700', color: colors.success, fontFamily: 'monospace' }}>${bestDeal.price.toFixed(0)}</div>
+                  </div>
+                )}
+                {shoppingList.length > 0 ? shoppingList.sort((a, b) => a.price - b.price).map((item, idx) => (
+                  <div key={item.id} style={{ ...base.card, border: item.id === bestDeal?.id ? `1px solid ${colors.success}50` : undefined, background: item.id === bestDeal?.id ? `${colors.success}08` : undefined }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div><div style={{ fontWeight: '600' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '11px', color: colors.muted }}>{item.item}</div></div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
+                    </div>
+                    <button onClick={() => setShoppingList(prev => prev.filter(i => i.id !== item.id))} style={{ fontSize: '10px', color: colors.danger, background: 'none', border: 'none', cursor: 'pointer', marginTop: '6px' }}>🗑️ Remove</button>
+                  </div>
+                )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>🛒 Add shop quotes to compare</div>}
+              </>
+            )}
+
+            {/* Map Sub-Tab */}
+            {toolsSubTab === 'map' && (
+              <>
+                <div style={{ ...base.card, background: 'linear-gradient(135deg, #ef444410, #ef444405)', border: '1px solid #ef444430' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>🗺️ Find Nearby Jewelry Shops</div>
+                  <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '12px' }}>
+                    {mapLoaded ? 'Search for gold and jade dealers near you' : 'Loading map...'}
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      value={mapSearchQuery}
+                      onChange={(e) => setMapSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && searchNearbyJewelry()}
+                      placeholder="Search: gold dealers, jade shops..."
+                      style={base.input}
+                    />
+                  </div>
+                  <button
+                    onClick={searchNearbyJewelry}
+                    disabled={!mapLoaded || !map}
+                    style={{ ...base.btn, ...base.btnGold, width: '100%' }}
+                  >
+                    🔍 Search Nearby
+                  </button>
                 </div>
 
-                {markers.length > 0 && (
-                  <div style={base.card}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
-                      Found {markers.length} shop{markers.length !== 1 ? 's' : ''}
-                    </div>
-                    <div style={{ fontSize: '10px', color: colors.muted }}>
-                      Click markers on map to view details
+                {!mapLoaded ? (
+                  <div style={{ ...base.card, textAlign: 'center', padding: '40px 20px' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>⏳</div>
+                    <div style={{ color: colors.muted }}>Loading Google Maps...</div>
+                    <div style={{ fontSize: '10px', color: colors.muted, marginTop: '8px' }}>
+                      Requires Google Maps API key
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <div
+                      ref={mapContainerRef}
+                      style={{
+                        width: '100%',
+                        height: '400px',
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        border: `1px solid ${colors.border}`,
+                        marginBottom: '10px'
+                      }}
+                    />
+
+                    <div style={base.card}>
+                      <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '8px' }}>💡 Tips:</div>
+                      <ul style={{ fontSize: '11px', color: colors.muted, margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
+                        <li>Tap markers to see shop details</li>
+                        <li>Blue marker shows your location</li>
+                        <li>Gold diamond markers are jewelry stores</li>
+                        <li>Search radius: 5km / 3 miles</li>
+                      </ul>
+                    </div>
+
+                    {markers.length > 0 && (
+                      <div style={base.card}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                          Found {markers.length} shop{markers.length !== 1 ? 's' : ''}
+                        </div>
+                        <div style={{ fontSize: '10px', color: colors.muted }}>
+                          Click markers on map to view details
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
-          </>
-        )}
-
-        {/* ========== COMPARE TAB ========== */}
-        {activeTab === 'list' && (
-          <>
-            <div style={base.card}>
-              <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.list }}>🛒 Price Comparison</div>
-              {!showAddShop ? (
-                <button onClick={() => setShowAddShop(true)} style={{ ...base.btn, ...base.btnGold, width: '100%' }}>➕ Add Shop Quote</button>
-              ) : (
-                <>
-                  <div style={{ marginBottom: '10px', position: 'relative' }}>
-                    <label style={base.label}>Search Business</label>
-                    <input type="text" value={placeSearch} onChange={(e) => { setPlaceSearch(e.target.value); searchPlaces(e.target.value); }} placeholder="Search jewelry shops..." style={base.input} />
-                    {placeResults.length > 0 && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a24', border: `1px solid ${colors.border}`, borderRadius: '8px', marginTop: '4px', zIndex: 10, maxHeight: '150px', overflow: 'auto' }}>
-                        {placeResults.map((p) => (
-                          <div key={p.placeId} onClick={() => selectPlace(p)} style={{ padding: '10px', cursor: 'pointer', borderBottom: `1px solid ${colors.border}` }}>
-                            <div style={{ fontWeight: '500', fontSize: '13px' }}>{p.name}</div>
-                            <div style={{ fontSize: '10px', color: colors.muted }}>{p.address}</div>
-                            {p.rating && <div style={{ fontSize: '10px', color: colors.list }}>⭐ {p.rating}</div>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ ...base.grid2, marginBottom: '10px' }}>
-                    <div><label style={base.label}>Shop Name</label><input type="text" value={newShop.name} onChange={(e) => setNewShop({ ...newShop, name: e.target.value })} style={base.input} /></div>
-                    <div><label style={base.label}>Price ($)</label><input type="number" value={newShop.price} onChange={(e) => setNewShop({ ...newShop, price: e.target.value })} style={base.input} /></div>
-                  </div>
-                  <div style={{ marginBottom: '10px' }}><label style={base.label}>Item Description</label><input type="text" value={newShop.item} onChange={(e) => setNewShop({ ...newShop, item: e.target.value })} placeholder="24K Cuban 10g" style={base.input} /></div>
-                  <div style={base.grid2}>
-                    <button onClick={() => { setShowAddShop(false); setNewShop({ name: '', address: '', item: '', price: '', notes: '', rating: '' }); }} style={{ ...base.btn, background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>Cancel</button>
-                    <button onClick={addToShoppingList} style={{ ...base.btn, ...base.btnGold }}>Add</button>
-                  </div>
-                </>
-              )}
-            </div>
-            {bestDeal && shoppingList.length > 1 && (
-              <div style={{ background: `linear-gradient(90deg, ${colors.success}15, ${colors.success}08)`, border: `1px solid ${colors.success}40`, borderRadius: '12px', padding: '12px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div><div style={{ fontSize: '10px', color: colors.success, fontWeight: '600' }}>🏆 BEST DEAL</div><div style={{ fontWeight: '600' }}>{bestDeal.name}</div></div>
-                <div style={{ fontSize: '22px', fontWeight: '700', color: colors.success, fontFamily: 'monospace' }}>${bestDeal.price.toFixed(0)}</div>
-              </div>
-            )}
-            {shoppingList.length > 0 ? shoppingList.sort((a, b) => a.price - b.price).map((item, idx) => (
-              <div key={item.id} style={{ ...base.card, border: item.id === bestDeal?.id ? `1px solid ${colors.success}50` : undefined, background: item.id === bestDeal?.id ? `${colors.success}08` : undefined }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div><div style={{ fontWeight: '600' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '11px', color: colors.muted }}>{item.item}</div></div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
-                </div>
-                <button onClick={() => setShoppingList(prev => prev.filter(i => i.id !== item.id))} style={{ fontSize: '10px', color: colors.danger, background: 'none', border: 'none', cursor: 'pointer', marginTop: '6px' }}>🗑️ Remove</button>
-              </div>
-            )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>🛒 Add shop quotes to compare</div>}
-          </>
-        )}
-
-        {/* ========== HISTORY TAB ========== */}
-        {activeTab === 'history' && (
-          <>
-            {history.length > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}><span style={{ fontSize: '11px', color: colors.muted }}>{history.length} entries</span><button onClick={() => setHistory([])} style={{ ...base.btn, padding: '5px 10px', fontSize: '10px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)' }}>Clear All</button></div>}
-            {history.length > 0 ? history.map((e) => (
-              <div key={e.id} style={base.card}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '10px', color: colors.muted }}>{e.timestamp}</span>
-                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: e.type === 'gold' ? `${colors.gold}20` : e.type === 'jade' ? `${colors.jade}20` : `${colors.scan}20`, color: e.type === 'gold' ? colors.gold : e.type === 'jade' ? colors.jade : colors.scan, fontWeight: '600' }}>{e.type?.toUpperCase()}</span>
-                </div>
-                {e.grade && <div style={{ fontSize: '15px', fontWeight: '600', color: e.grade === 'STEAL' || e.grade === 'GOOD' ? colors.success : e.grade === 'FAIR' ? colors.warning : colors.danger }}>{e.grade}</div>}
-                <div style={{ fontSize: '11px', color: colors.muted }}>{e.pct && `${e.pct}% markup`}{e.ratio && ` • ${e.ratio}% ratio`}{e.price && ` • $${e.price}`}</div>
-                <button onClick={() => setHistory(prev => prev.filter(i => i.id !== e.id))} style={{ fontSize: '10px', color: colors.muted, background: 'none', border: 'none', cursor: 'pointer', marginTop: '4px' }}>🗑️</button>
-              </div>
-            )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>📜 No history yet</div>}
           </>
         )}
 
@@ -1300,36 +1338,11 @@ export default function CalGeo() {
             CalGeo v1.2 • Powered by Gemini AI
           </div>
 
-          {/* Accredited Data Sources */}
-          <div style={{ fontSize: '8px', color: '#666', marginBottom: '12px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', maxWidth: '400px', margin: '0 auto 12px' }}>
-            <div style={{ fontWeight: '600', color: '#888', marginBottom: '6px', textTransform: 'uppercase' }}>Accredited Sources</div>
-            <div style={{ lineHeight: '1.6', textAlign: 'left' }}>
-              <div style={{ marginBottom: '4px' }}>
-                <strong>Gold Spot Prices:</strong> Gold-API.com (London Bullion Market Association)
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <strong>Jade Valuations:</strong> Gemological Institute of America (GIA) standards
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <strong>Sales Tax Data:</strong> Tax Foundation & state revenue departments
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <strong>Location Services:</strong> Google Maps Platform & Places API
-              </div>
-              <div>
-                <strong>AI Analysis:</strong> Google Gemini Pro Vision
-              </div>
-            </div>
-          </div>
-
           {/* Legal Disclaimer */}
           <div style={{ fontSize: '8px', color: '#444', lineHeight: '1.4', maxWidth: '400px', margin: '0 auto 10px' }}>
             <strong style={{ color: '#666' }}>LEGAL DISCLAIMER:</strong> CalGeo provides jewelry valuation estimates for informational purposes only.
-            All calculations, AI image analyses, and price recommendations are approximations based on market data and algorithmic models.
-            Actual jewelry values may vary significantly due to craftsmanship, authenticity, market conditions, regional pricing, and individual buyer preferences.
-            CalGeo and Marketsavage are not liable for any financial decisions, transactions, or outcomes resulting from the use of this application.
+            All calculations, AI analyses, and price recommendations are approximations. Actual jewelry values may vary significantly.
             Users assume full responsibility for verifying jewelry authenticity and negotiating prices. Always consult certified appraisers for definitive valuations.
-            No warranties, express or implied, are provided regarding accuracy, completeness, or reliability of information.
           </div>
 
           <div style={{ fontSize: '8px', color: '#555' }}>
@@ -1337,122 +1350,6 @@ export default function CalGeo() {
           </div>
         </div>
       </main>
-
-      {/* BOTTOM LEFT SIDEBAR */}
-      <div style={{ position: 'fixed', bottom: '20px', left: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 50 }}>
-        {[
-          { id: 'history', icon: '📜', label: 'History', color: colors.history },
-          { id: 'compare', icon: '🛒', label: 'Compare', color: colors.list },
-          { id: 'map', icon: '🗺️', label: 'Map', color: '#ef4444' }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => setShowBottomSidebar(showBottomSidebar === item.id ? null : item.id)}
-            style={{
-              ...base.btn,
-              width: '52px',
-              height: '52px',
-              borderRadius: '50%',
-              background: showBottomSidebar === item.id ? item.color : 'rgba(255,255,255,0.08)',
-              border: `2px solid ${showBottomSidebar === item.id ? item.color : colors.border}`,
-              fontSize: '20px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {item.icon}
-          </button>
-        ))}
-        {/* CRM Support for Free Tier */}
-        {userTier === 'free' && (
-          <button
-            onClick={() => window.open('mailto:support@marketsavage.com?subject=CalGeo Support Request', '_blank')}
-            style={{
-              ...base.btn,
-              width: '52px',
-              height: '52px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.08)',
-              border: `2px solid ${colors.border}`,
-              fontSize: '20px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: '10px'
-            }}
-            title="Contact Support"
-          >
-            💬
-          </button>
-        )}
-      </div>
-
-      {/* BOTTOM SIDEBAR PANELS */}
-      {showBottomSidebar && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxHeight: '70vh', background: '#0c0c12', borderTop: `2px solid ${colors.gold}40`, padding: '20px', overflowY: 'auto', zIndex: 60, boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: colors.gold }}>
-              {showBottomSidebar === 'history' && '📜 History'}
-              {showBottomSidebar === 'compare' && '🛒 Price Comparison'}
-              {showBottomSidebar === 'map' && '🗺️ Nearby Shops'}
-            </div>
-            <button onClick={() => setShowBottomSidebar(null)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
-          </div>
-
-          {/* History Content */}
-          {showBottomSidebar === 'history' && (
-            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-              {history.length > 0 ? history.slice(0, 10).map((e) => (
-                <div key={e.id} style={{ ...base.card, marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '9px', color: colors.muted }}>{e.timestamp}</span>
-                    <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '8px', background: e.type === 'gold' ? `${colors.gold}20` : e.type === 'silver' ? `#c0c0c020` : e.type === 'jade' ? `${colors.jade}20` : `${colors.scan}20`, color: e.type === 'gold' ? colors.gold : e.type === 'silver' ? '#c0c0c0' : e.type === 'jade' ? colors.jade : colors.scan, fontWeight: '600' }}>{e.type?.toUpperCase()}</span>
-                  </div>
-                  {e.grade && <div style={{ fontSize: '13px', fontWeight: '600', color: e.grade === 'STEAL' || e.grade === 'GOOD' ? colors.success : e.grade === 'FAIR' ? colors.warning : colors.danger }}>{e.grade}</div>}
-                  <div style={{ fontSize: '10px', color: colors.muted }}>{e.pct && `${e.pct}% markup`}{e.ratio && ` • ${e.ratio}% ratio`}{e.price && ` • $${e.price}`}</div>
-                </div>
-              )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>📜 No history yet</div>}
-            </div>
-          )}
-
-          {/* Compare Content */}
-          {showBottomSidebar === 'compare' && (
-            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-              {shoppingList.length > 0 ? shoppingList.sort((a, b) => a.price - b.price).map((item, idx) => (
-                <div key={item.id} style={{ ...base.card, marginBottom: '8px', border: idx === 0 ? `1px solid ${colors.success}50` : undefined }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div><div style={{ fontWeight: '600', fontSize: '13px' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '10px', color: colors.muted }}>{item.item}</div></div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
-                  </div>
-                </div>
-              )) : <div style={{ textAlign: 'center', padding: '30px', color: colors.muted }}>🛒 Add shop quotes to compare</div>}
-            </div>
-          )}
-
-          {/* Map Content */}
-          {showBottomSidebar === 'map' && (
-            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-              <div
-                ref={mapContainerRef}
-                style={{
-                  width: '100%',
-                  height: '300px',
-                  borderRadius: '14px',
-                  overflow: 'hidden',
-                  border: `1px solid ${colors.border}`,
-                  marginBottom: '10px'
-                }}
-              />
-              <div style={{ fontSize: '11px', color: colors.muted, textAlign: 'center' }}>
-                {mapLoaded ? 'Tap markers to view shop details' : 'Loading map...'}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* LOGIN MODAL */}
       {showLogin && (
@@ -1497,6 +1394,64 @@ export default function CalGeo() {
         </div>
       )}
 
+      {/* ABOUT MODAL */}
+      {showAbout && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px', overflowY: 'auto' }} onClick={() => setShowAbout(false)}>
+          <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>ℹ️ About CalGeo</div>
+              <button onClick={() => setShowAbout(false)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '8px' }}>A Marketsavage Product</div>
+              <div style={{ fontSize: '11px', color: colors.muted, lineHeight: '1.6' }}>
+                CalGeo is a professional jewelry valuation tool for calculating fair market values for gold chains, charms, and jade jewelry.
+                Features AI-powered image analysis, live gold spot prices, and an interactive map to find nearby jewelry shops.
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.gold, marginBottom: '10px' }}>📚 Accredited Data Sources</div>
+              <div style={{ fontSize: '11px', color: colors.muted, lineHeight: '1.8' }}>
+                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: `1px solid ${colors.border}` }}>
+                  <div style={{ color: colors.text, fontWeight: '600', marginBottom: '2px' }}>Gold Spot Prices</div>
+                  <div>Gold-API.com (London Bullion Market Association)</div>
+                </div>
+                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: `1px solid ${colors.border}` }}>
+                  <div style={{ color: colors.text, fontWeight: '600', marginBottom: '2px' }}>Jade Valuations</div>
+                  <div>Gemological Institute of America (GIA) standards</div>
+                </div>
+                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: `1px solid ${colors.border}` }}>
+                  <div style={{ color: colors.text, fontWeight: '600', marginBottom: '2px' }}>Sales Tax Data</div>
+                  <div>Tax Foundation & state revenue departments</div>
+                </div>
+                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: `1px solid ${colors.border}` }}>
+                  <div style={{ color: colors.text, fontWeight: '600', marginBottom: '2px' }}>Location Services</div>
+                  <div>Google Maps Platform & Places API</div>
+                </div>
+                <div>
+                  <div style={{ color: colors.text, fontWeight: '600', marginBottom: '2px' }}>AI Analysis</div>
+                  <div>Google Gemini Pro Vision</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>⚠️ Important Disclaimer</div>
+              <div style={{ fontSize: '10px', color: colors.muted, lineHeight: '1.6' }}>
+                CalGeo provides jewelry valuation estimates for informational purposes only. All calculations are approximations.
+                Always verify authenticity with certified appraisers before making purchase decisions.
+              </div>
+            </div>
+
+            <div style={{ fontSize: '10px', color: '#666', textAlign: 'center' }}>
+              CalGeo v1.2 • © 2025 Marketsavage. All rights reserved.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MENU DRAWER */}
       {showMenu && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100 }} onClick={() => setShowMenu(false)}>
@@ -1514,9 +1469,9 @@ export default function CalGeo() {
               {[
                 { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
                 { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
-                { label: '🗺️ Find Jewelry Shops', action: () => { setActiveTab('map'); setShowMenu(false); } },
+                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
                 { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
-                { label: '📜 View History', action: () => { setActiveTab('history'); setShowMenu(false); } },
+                { label: '🔧 Tools', action: () => { setActiveTab('tools'); setShowMenu(false); } },
                 { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } }
               ].map((item, idx) => (
                 <button key={idx} onClick={item.action} style={{ ...base.btn, width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
