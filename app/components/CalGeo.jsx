@@ -764,20 +764,22 @@ export default function CalGeo() {
                 <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Spot Price</span>
                 <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
               </div>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} style={{ ...base.select, minWidth: '125px', flex: 'none' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} style={{ ...base.select, minWidth: '110px', flex: 'none', fontSize: '13px' }}>
                   {karatOptions.map(o => <option key={o.value} value={o.value}>{o.label} ({o.desc})</option>)}
                 </select>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <span style={{ color: colors.gold, fontFamily: 'monospace', fontWeight: '700', fontSize: '26px' }}>${getSpotForKarat(spotPriceKarat).toFixed(2)}</span>
-                  <span style={{ color: colors.muted, fontSize: '11px' }}>/g</span>
+                <div style={{ flex: 1, minWidth: '120px', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '2px' }}>
+                    <span style={{ color: colors.gold, fontFamily: 'monospace', fontWeight: '700', fontSize: '22px' }}>${getSpotForKarat(spotPriceKarat).toFixed(2)}</span>
+                    <span style={{ color: colors.muted, fontSize: '11px' }}>/g</span>
+                  </div>
                   {priceSource && (
                     <div style={{ fontSize: '8px', color: colors.muted, marginTop: '2px' }}>
                       Source: {priceSource === 'api' ? 'Gold API' : priceSource === 'cached' ? 'Cached' : priceSource}
                     </div>
                   )}
                 </div>
-                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, ...base.btnGold, padding: '10px 14px' }}>{isRefreshing ? '⏳' : '🔄'}</button>
+                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, ...base.btnGold, padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
               </div>
             </div>
 
@@ -889,17 +891,19 @@ export default function CalGeo() {
                 <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Silver Spot Price</span>
                 <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <span style={{ color: '#c0c0c0', fontFamily: 'monospace', fontWeight: '700', fontSize: '26px' }}>${spotPriceSilver.toFixed(2)}</span>
-                  <span style={{ color: colors.muted, fontSize: '11px' }}>/g</span>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '120px', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '2px' }}>
+                    <span style={{ color: '#c0c0c0', fontFamily: 'monospace', fontWeight: '700', fontSize: '22px' }}>${spotPriceSilver.toFixed(2)}</span>
+                    <span style={{ color: colors.muted, fontSize: '11px' }}>/g</span>
+                  </div>
                   {priceSource && (
                     <div style={{ fontSize: '8px', color: colors.muted, marginTop: '2px' }}>
                       Source: {priceSource === 'api' ? 'Silver API' : priceSource === 'cached' ? 'Cached' : priceSource}
                     </div>
                   )}
                 </div>
-                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, background: `linear-gradient(135deg, #c0c0c0, #a8a8a8)`, color: '#000', padding: '10px 14px' }}>{isRefreshing ? '⏳' : '🔄'}</button>
+                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, background: `linear-gradient(135deg, #c0c0c0, #a8a8a8)`, color: '#000', padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
               </div>
             </div>
 
