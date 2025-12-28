@@ -1607,13 +1607,13 @@ export default function CalGeo() {
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
               {[
-                { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } },
                 { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
                 { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
                 { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
                 { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
                 { label: '🔧 Tools', action: () => { setActiveTab('tools'); setShowMenu(false); } },
-                { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } }
+                { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } },
+                { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } }
               ].map((item, idx) => (
                 <button key={idx} onClick={item.action} style={{ ...base.btn, width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
               ))}
