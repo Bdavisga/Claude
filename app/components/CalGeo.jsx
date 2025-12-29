@@ -12,6 +12,8 @@ import {
   isJadeColorLocked,
   initiateCheckout
 } from './paywall-system';
+import { supabase } from '../../lib/supabase';
+import AuthModal from './AuthModal';
 
 // ============================================================
 // CALGEO v1.2 - Production Ready
@@ -47,9 +49,9 @@ export default function CalGeo() {
   const [userTier, setUserTier] = useState('free');
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
   const [analysisCount, setAnalysisCount] = useState(0);
   const MAX_FREE_ANALYSES = 3;
   const [toolsSubTab, setToolsSubTab] = useState('history'); // 'history', 'compare', 'map'
@@ -203,32 +205,60 @@ export default function CalGeo() {
     try { localStorage.setItem('calgeo_state', selectedState); } catch (e) {}
   }, [selectedState]);
 
-  // Load saved tier and scan count on mount
+  // Authentication session check and data loading
   useEffect(() => {
-    const saved = localStorage.getItem('calgeo_tier');
-    const scans = localStorage.getItem('calgeo_scans');
-    if (saved) setUserTier(saved);
-    if (scans) setScanCount(parseInt(scans));
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsLoggedIn(true);
+        loadUserData(session.user.id);
+      } else {
+        // Fallback to localStorage for anonymous users
+        const saved = localStorage.getItem('calgeo_tier');
+        const scans = localStorage.getItem('calgeo_scans');
+        if (saved) setUserTier(saved);
+        if (scans) setScanCount(parseInt(scans));
+      }
+    });
 
-    // Check URL for successful upgrade
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsLoggedIn(true);
+        loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
+        setUserTier('free');
+        setScanCount(0);
+      }
+    });
+
+    // Check URL for successful Stripe upgrade
     const params = new URLSearchParams(window.location.search);
     const upgraded = params.get('upgraded');
     if (upgraded) {
       setUserTier(upgraded);
       localStorage.setItem('calgeo_tier', upgraded);
-      setScanCount(0);
-      localStorage.setItem('calgeo_scans', '0');
       window.history.replaceState({}, '', '/');
     }
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Persist tier and scan count
+  // Persist tier and scan count (localStorage for anonymous, Supabase for logged in)
   useEffect(() => {
     try { localStorage.setItem('calgeo_tier', userTier); } catch (e) {}
+    if (user) syncUserData();
   }, [userTier]);
 
   useEffect(() => {
     try { localStorage.setItem('calgeo_scans', scanCount.toString()); } catch (e) {}
+    if (user) syncUserData();
   }, [scanCount]);
 
   // First visit splash detection
@@ -563,20 +593,67 @@ export default function CalGeo() {
     setIsRefreshing(false);
   };
 
-  const handleLogin = (user, pass) => {
-    // Simple login - in production, verify against backend
-    if (user && pass) {
-      setIsLoggedIn(true);
-      setUsername(user);
-      localStorage.setItem('calgeo_user', JSON.stringify({ username: user }));
-      setShowLogin(false);
+  // Load user data from Supabase database
+  const loadUserData = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setUserTier(data.tier || 'free');
+        setScanCount(data.scan_count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Fallback to localStorage if database fails
+      const saved = localStorage.getItem('calgeo_tier');
+      const scans = localStorage.getItem('calgeo_scans');
+      if (saved) setUserTier(saved);
+      if (scans) setScanCount(parseInt(scans));
     }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUsername('');
-    localStorage.removeItem('calgeo_user');
+  // Sync user data to Supabase database
+  const syncUserData = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          tier: userTier,
+          scan_count: scanCount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error syncing user data:', error);
+    }
+  };
+
+  const handleAuthSuccess = (authenticatedUser) => {
+    setUser(authenticatedUser);
+    setIsLoggedIn(true);
+    loadUserData(authenticatedUser.id);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsLoggedIn(false);
+      setUserTier('free');
+      setScanCount(0);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const searchPlaces = async (query) => {
@@ -848,13 +925,16 @@ export default function CalGeo() {
           <span style={{ fontSize: '22px', fontWeight: '700', background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CalGeo</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isLoggedIn ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', color: colors.text, fontWeight: '600' }}>{username}</span>
-              <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '12px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#555', color: userTier === 'free' ? '#aaa' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</span>
-            </div>
+          {isLoggedIn && user ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: colors.muted, fontWeight: '600', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</span>
+                <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '12px', background: userTier === 'expert' ? `linear-gradient(90deg, ${colors.gold}, #f4d03f)` : userTier === 'pro' ? '#3b82f6' : '#555', color: userTier === 'free' ? '#aaa' : '#000', textTransform: 'uppercase', fontWeight: '700' }}>{userTier}</span>
+              </div>
+              <button onClick={handleLogout} style={{ ...base.btn, padding: '6px 10px', fontSize: '11px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}>Logout</button>
+            </>
           ) : (
-            <button onClick={() => setShowLogin(true)} style={{ ...base.btn, padding: '6px 12px', fontSize: '12px', background: `${colors.gold}15`, border: `1px solid ${colors.gold}40`, color: colors.gold }}>Login</button>
+            <button onClick={() => setShowAuthModal(true)} style={{ ...base.btn, padding: '6px 12px', fontSize: '12px', background: `${colors.gold}15`, border: `1px solid ${colors.gold}40`, color: colors.gold }}>Login</button>
           )}
           <button onClick={() => setShowMenu(!showMenu)} style={{ ...base.btn, padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '3px', width: '32px', height: '32px', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
@@ -1521,34 +1601,6 @@ export default function CalGeo() {
         </div>
       </main>
 
-      {/* LOGIN MODAL */}
-      {showLogin && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowLogin(false)}>
-          <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '340px', width: '100%', border: `1px solid ${colors.gold}30` }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔐</div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>Login to CalGeo</div>
-              <div style={{ fontSize: '11px', color: colors.muted, marginTop: '4px' }}>Premium users only</div>
-            </div>
-            <form onSubmit={(e) => { e.preventDefault(); handleLogin(e.target.username.value, e.target.password.value); }}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ ...base.label, marginBottom: '6px' }}>Username</label>
-                <input name="username" type="text" required style={base.input} placeholder="Enter username" />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ ...base.label, marginBottom: '6px' }}>Password</label>
-                <input name="password" type="password" required style={base.input} placeholder="Enter password" />
-              </div>
-              <button type="submit" style={{ ...base.btn, ...base.btnGold, width: '100%', marginBottom: '8px' }}>Login</button>
-              <button type="button" onClick={() => setShowLogin(false)} style={{ ...base.btn, width: '100%', background: 'rgba(255,255,255,0.05)', color: colors.muted, border: `1px solid ${colors.border}` }}>Cancel</button>
-            </form>
-            <div style={{ fontSize: '9px', color: colors.muted, textAlign: 'center', marginTop: '12px' }}>
-              Pro/Expert tier required • Contact support@marketsavage.com
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* UPGRADE MODAL - Triggers Stripe Checkout */}
       {showUpgrade && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowUpgrade(false)}>
@@ -1825,11 +1877,12 @@ export default function CalGeo() {
               background: 'linear-gradient(180deg, #1a1a28 0%, #0f0f18 100%)',
               borderRadius: '24px',
               maxWidth: '420px',
+              maxHeight: '75vh',
               width: '100%',
               border: `2px solid ${colors.gold}`,
               boxShadow: `0 0 60px ${colors.gold}40, 0 20px 40px rgba(0,0,0,0.5)`,
               position: 'relative',
-              overflow: 'hidden',
+              overflow: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1940,9 +1993,27 @@ export default function CalGeo() {
                     color: '#000',
                     cursor: 'pointer',
                     boxShadow: `0 4px 20px ${colors.gold}40`,
+                    marginBottom: '12px',
                   }}
                 >
                   Claim 20% Off →
+                </button>
+
+                {/* No Thank You Button */}
+                <button
+                  onClick={handleSplashDismiss}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    color: colors.muted,
+                    cursor: 'pointer',
+                  }}
+                >
+                  No Thank You
                 </button>
 
                 <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '11px', color: colors.muted }}>
@@ -2061,7 +2132,15 @@ export default function CalGeo() {
         feature={paywallFeature}
         currentTier={userTier}
         scansRemaining={getScansRemaining(userTier, scanCount)}
-        onUpgrade={(tier) => initiateCheckout(tier, userId)}
+        onUpgrade={(tier) => initiateCheckout(tier, user?.id || userId)}
+      />
+
+      {/* AUTH MODAL */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+        colors={colors}
       />
     </div>
   );
