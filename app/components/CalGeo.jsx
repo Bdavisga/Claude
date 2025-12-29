@@ -73,6 +73,11 @@ export default function CalGeo() {
     return 'anon';
   });
 
+  // First Visit Splash
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashEmail, setSplashEmail] = useState('');
+  const [splashStep, setSplashStep] = useState(1); // 1 = offer, 2 = email capture
+
   // Spot Price
   const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
   const [spotPriceKarat, setSpotPriceKarat] = useState('24');
@@ -225,6 +230,21 @@ export default function CalGeo() {
   useEffect(() => {
     try { localStorage.setItem('calgeo_scans', scanCount.toString()); } catch (e) {}
   }, [scanCount]);
+
+  // First visit splash detection
+  useEffect(() => {
+    const hasSeenSplash = localStorage.getItem('calgeo_seen_splash');
+    const hasEmail = localStorage.getItem('calgeo_user_email');
+
+    // Show splash if first visit and no email captured yet
+    if (!hasSeenSplash && !hasEmail) {
+      // Delay splash by 1 second for better UX
+      const timer = setTimeout(() => {
+        setShowSplash(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // ==================== CONFIG DATA ====================
   const stateTaxRates = {
@@ -637,6 +657,57 @@ export default function CalGeo() {
   };
 
   const getBestDeal = () => shoppingList.length ? shoppingList.reduce((min, i) => i.price < min.price ? i : min) : null;
+
+  // Handle first-visit splash discount checkout
+  const handleSplashCheckout = async () => {
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(splashEmail)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    // Save email and user profile
+    localStorage.setItem('calgeo_user_email', splashEmail);
+    localStorage.setItem('calgeo_seen_splash', 'true');
+    localStorage.setItem('calgeo_user_created', new Date().toISOString());
+
+    // Close splash and initiate discounted checkout
+    setShowSplash(false);
+
+    // Call checkout with discount parameter
+    try {
+      console.log('Initiating first-visit discount checkout for:', splashEmail);
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: 'pro',
+          userId: userId,
+          email: splashEmail,
+          discount: 20, // 20% off first visit
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } else {
+        const error = await res.json();
+        alert('Checkout failed: ' + (error.error || 'Unknown error'));
+      }
+    } catch (e) {
+      console.error('Splash checkout error:', e);
+      alert('Error starting checkout: ' + e.message);
+    }
+  };
+
+  const handleSplashDismiss = () => {
+    localStorage.setItem('calgeo_seen_splash', 'true');
+    setShowSplash(false);
+  };
 
   // ==================== CALCULATIONS ====================
   const goldCalc = useMemo(() => {
@@ -1729,6 +1800,256 @@ export default function CalGeo() {
                 <div style={{ marginTop: '8px' }}>© 2025 Marketsavage</div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* FIRST VISIT SPLASH - 20% OFF */}
+      {showSplash && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(10,10,20,0.98) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            backdropFilter: 'blur(10px)',
+          }}
+          onClick={handleSplashDismiss}
+        >
+          <div
+            style={{
+              background: 'linear-gradient(180deg, #1a1a28 0%, #0f0f18 100%)',
+              borderRadius: '24px',
+              maxWidth: '420px',
+              width: '100%',
+              border: `2px solid ${colors.gold}`,
+              boxShadow: `0 0 60px ${colors.gold}40, 0 20px 40px rgba(0,0,0,0.5)`,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Dismiss Button */}
+            <button
+              onClick={handleSplashDismiss}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                color: '#fff',
+                fontSize: '18px',
+                cursor: 'pointer',
+                zIndex: 10,
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Step 1: Special Offer */}
+            {splashStep === 1 && (
+              <div style={{ padding: '40px 28px 28px' }}>
+                {/* Attention Grabber */}
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+                  <div
+                    style={{
+                      fontSize: '28px',
+                      fontWeight: '800',
+                      background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Welcome to CalGeo!
+                  </div>
+                  <div style={{ fontSize: '14px', color: colors.muted }}>
+                    Professional Jewelry Valuation
+                  </div>
+                </div>
+
+                {/* Special Offer Badge */}
+                <div
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.gold}20, ${colors.gold}10)`,
+                    border: `2px solid ${colors.gold}`,
+                    borderRadius: '16px',
+                    padding: '20px',
+                    marginBottom: '24px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '12px', color: colors.gold, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                    🔥 Limited Time Offer
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: '800', color: colors.gold, lineHeight: '1', marginBottom: '6px' }}>
+                    20% OFF
+                  </div>
+                  <div style={{ fontSize: '15px', color: '#fff', fontWeight: '600' }}>
+                    CalGeo Pro - First Month
+                  </div>
+                  <div style={{ fontSize: '20px', color: colors.muted, marginTop: '8px' }}>
+                    <span style={{ textDecoration: 'line-through' }}>$4.99</span>
+                    <span style={{ fontSize: '28px', color: colors.gold, fontWeight: '700', marginLeft: '12px' }}>$3.99</span>
+                  </div>
+                </div>
+
+                {/* Benefits */}
+                <div style={{ marginBottom: '24px' }}>
+                  {[
+                    '✓ 25 AI scans per month',
+                    '✓ Full calculation history',
+                    '✓ Negotiation targets',
+                    '✓ All jade colors unlocked',
+                    '✓ Shopping list comparisons',
+                  ].map((benefit, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        fontSize: '13px',
+                        color: '#e5e5e5',
+                        padding: '8px 0',
+                        borderBottom: idx < 4 ? `1px solid ${colors.border}` : 'none',
+                      }}
+                    >
+                      {benefit}
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => setSplashStep(2)}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: `linear-gradient(135deg, ${colors.gold} 0%, #c9a947 100%)`,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#000',
+                    cursor: 'pointer',
+                    boxShadow: `0 4px 20px ${colors.gold}40`,
+                  }}
+                >
+                  Claim 20% Off →
+                </button>
+
+                <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '11px', color: colors.muted }}>
+                  Cancel anytime • No commitments
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Email Capture */}
+            {splashStep === 2 && (
+              <div style={{ padding: '40px 28px 28px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '12px' }}>📧</div>
+                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>
+                    Get Your Discount
+                  </div>
+                  <div style={{ fontSize: '13px', color: colors.muted }}>
+                    Enter your email to claim 20% off Pro
+                  </div>
+                </div>
+
+                {/* Email Input */}
+                <div style={{ marginBottom: '20px' }}>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={splashEmail}
+                    onChange={(e) => setSplashEmail(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSplashCheckout()}
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      background: colors.inputBg,
+                      border: `2px solid ${colors.inputBorder}`,
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      color: colors.text,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Discount Summary */}
+                <div
+                  style={{
+                    background: `${colors.gold}10`,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    marginBottom: '20px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: colors.muted }}>CalGeo Pro (monthly)</span>
+                    <span style={{ fontSize: '12px', color: colors.muted, textDecoration: 'line-through' }}>$4.99</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: colors.gold }}>First-visit discount (20%)</span>
+                    <span style={{ fontSize: '12px', color: colors.gold }}>-$1.00</span>
+                  </div>
+                  <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '8px', marginTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>First Month Total</span>
+                    <span style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>$3.99</span>
+                  </div>
+                </div>
+
+                {/* Continue Button */}
+                <button
+                  onClick={handleSplashCheckout}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: `linear-gradient(135deg, ${colors.gold} 0%, #c9a947 100%)`,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#000',
+                    cursor: 'pointer',
+                    marginBottom: '12px',
+                  }}
+                >
+                  Continue to Checkout
+                </button>
+
+                <button
+                  onClick={() => setSplashStep(1)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    color: colors.muted,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Back
+                </button>
+
+                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: colors.muted, lineHeight: '1.5' }}>
+                  Then $4.99/month after first month<br />Cancel anytime
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
