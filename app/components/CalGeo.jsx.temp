@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import {
   TIER_CONFIG,
   PaywallModal,
@@ -15,7 +14,6 @@ import {
 } from './paywall-system';
 import { supabase } from '../../lib/supabase';
 import AuthModal from './AuthModal';
-import '../styles/calgeo-design-system.css';
 
 // ============================================================
 // CALGEO v1.2 - Production Ready
@@ -24,18 +22,25 @@ import '../styles/calgeo-design-system.css';
 
 // ==================== LOGO COMPONENT ====================
 const CalGeoLogo = ({ size = 34 }) => (
-  <Image
-    src="/calgeo-logo-512.png"
-    alt="CalGeo Logo"
-    width={size}
-    height={size}
-    priority
-    style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      objectFit: 'contain'
-    }}
-  />
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: '#d4af37', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#b8960c', stopOpacity: 1 }} />
+      </linearGradient>
+      <linearGradient id="jadeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
+      </linearGradient>
+    </defs>
+    {/* Diamond shape */}
+    <path d="M50 10 L80 35 L50 90 L20 35 Z" fill="url(#goldGrad)" opacity="0.9" />
+    <path d="M50 10 L65 35 L50 60 L35 35 Z" fill="url(#jadeGrad)" opacity="0.7" />
+    {/* Facets */}
+    <path d="M50 10 L50 35 L65 35 Z" fill="#fff" opacity="0.3" />
+    <path d="M50 10 L50 35 L35 35 Z" fill="#fff" opacity="0.2" />
+    <circle cx="50" cy="30" r="3" fill="#fff" opacity="0.8" />
+  </svg>
 );
 
 export default function CalGeo() {
@@ -132,8 +137,6 @@ export default function CalGeo() {
   const [markers, setMarkers] = useState([]);
   const [userLocation, setUserLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // Default: NYC
   const [mapSearchQuery, setMapSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
   const mapContainerRef = useRef(null);
 
   // ==================== EFFECTS ====================
@@ -431,18 +434,12 @@ export default function CalGeo() {
       return;
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-      console.warn('Google Maps API key not configured. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local');
-      return;
-    }
-
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => setMapLoaded(true);
-    script.onerror = () => console.error('Google Maps failed to load. Check your API key and billing settings.');
+    script.onerror = () => console.error('Google Maps failed to load');
     document.head.appendChild(script);
   };
 
@@ -521,89 +518,46 @@ export default function CalGeo() {
       },
       title: 'Your Location'
     });
-
-    // Listen for map bounds changes to update visible results
-    newMap.addListener('idle', () => {
-      updateVisibleResults(newMap);
-    });
   };
 
   const searchNearbyJewelry = async () => {
     if (!map || !window.google) return;
 
-    setIsSearching(true);
-
-    // If search query looks like a location (zipcode, city), geocode it first
-    if (mapSearchQuery && mapSearchQuery.trim()) {
-      const geocoder = new window.google.maps.Geocoder();
-
-      geocoder.geocode({ address: mapSearchQuery }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const location = results[0].geometry.location;
-          map.setCenter(location);
-          map.setZoom(13);
-          performPlacesSearch(location);
-        } else {
-          // If geocoding fails, search in current map center
-          performPlacesSearch(map.getCenter());
-        }
-      });
-    } else {
-      // No search query, search around current map center
-      performPlacesSearch(map.getCenter());
-    }
-  };
-
-  const performPlacesSearch = (location) => {
-    if (!map || !window.google) return;
-
     const service = new window.google.maps.places.PlacesService(map);
     const request = {
-      location: location,
+      location: userLocation,
       radius: 5000, // 5km radius
-      keyword: 'jewelry store gold jade',
+      keyword: mapSearchQuery || 'jewelry store gold jade',
       type: 'jewelry_store'
     };
 
     service.nearbySearch(request, (results, status) => {
-      setIsSearching(false);
-
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
         // Clear old markers
         markers.forEach(marker => marker.setMap(null));
 
-        // Store full results
-        setSearchResults(results);
-
         // Add new markers
-        const newMarkers = results.map((place, index) => {
+        const newMarkers = results.map(place => {
           const marker = new window.google.maps.Marker({
             position: place.geometry.location,
             map: map,
             title: place.name,
-            label: {
-              text: `${index + 1}`,
-              color: '#000',
-              fontSize: '12px',
-              fontWeight: 'bold'
-            },
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="18" cy="18" r="16" fill="#d4af37" stroke="#000" stroke-width="2"/>
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 2 L22 12 L16 28 L10 12 Z" fill="#d4af37" stroke="#000" stroke-width="1"/>
                 </svg>
               `),
-              scaledSize: new window.google.maps.Size(36, 36),
-              labelOrigin: new window.google.maps.Point(18, 18)
+              scaledSize: new window.google.maps.Size(32, 32)
             }
           });
 
           const infoWindow = new window.google.maps.InfoWindow({
             content: `
-              <div style="color: #000; padding: 8px; min-width: 200px;">
+              <div style="color: #000; padding: 8px;">
                 <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600;">${place.name}</h3>
                 <p style="margin: 0; font-size: 12px; color: #666;">${place.vicinity}</p>
-                ${place.rating ? `<p style="margin: 4px 0 0 0; font-size: 12px;">⭐ ${place.rating}/5 (${place.user_ratings_total || 0} reviews)</p>` : ''}
+                ${place.rating ? `<p style="margin: 4px 0 0 0; font-size: 12px;">⭐ ${place.rating}/5</p>` : ''}
               </div>
             `
           });
@@ -612,47 +566,12 @@ export default function CalGeo() {
             infoWindow.open(map, marker);
           });
 
-          // Store place data with marker
-          marker.placeData = place;
-          marker.placeIndex = index;
-
           return marker;
         });
 
         setMarkers(newMarkers);
-      } else {
-        setSearchResults([]);
       }
     });
-  };
-
-  const updateVisibleResults = (mapInstance) => {
-    if (!mapInstance || markers.length === 0) return;
-
-    const bounds = mapInstance.getBounds();
-    if (!bounds) return;
-
-    const visibleResults = searchResults.filter((place) => {
-      return bounds.contains(place.geometry.location);
-    });
-
-    // Update search results to show only visible ones
-    if (visibleResults.length !== searchResults.length) {
-      setSearchResults(visibleResults);
-    }
-  };
-
-  const centerOnPlace = (place, index) => {
-    if (!map) return;
-
-    map.panTo(place.geometry.location);
-    map.setZoom(15);
-
-    // Find and click the corresponding marker
-    const marker = markers.find(m => m.placeIndex === index);
-    if (marker) {
-      window.google.maps.event.trigger(marker, 'click');
-    }
   };
 
   // ==================== API FUNCTIONS ====================
@@ -983,6 +902,8 @@ export default function CalGeo() {
   const effectiveTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
 
   // Grid helpers for layout
+  const grid2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' };
+  const grid3 = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-md)' };
 
   // ==================== RENDER ====================
   return (
@@ -1017,10 +938,10 @@ export default function CalGeo() {
           ) : (
             <button onClick={() => setShowAuthModal(true)} className="btn-outline btn-sm" style={{ borderColor: 'var(--accent-500)', color: 'var(--accent-500)' }}>Login</button>
           )}
-          <button onClick={() => setShowMenu(!showMenu)} className="btn-icon" style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
+          <button onClick={() => setShowMenu(!showMenu)} className="btn-icon">
+            <div style={{ width: '16px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px', marginBottom: '3px' }}></div>
+            <div style={{ width: '16px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px', marginBottom: '3px' }}></div>
+            <div style={{ width: '16px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
           </button>
         </div>
       </header>
@@ -1037,7 +958,7 @@ export default function CalGeo() {
             { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6' },
             { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4' }
           ].map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} className="btn-secondary" style={{padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '60px' }}>{t.icon} {t.label}</button>
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ ...base.btn, padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '60px' }}>{t.icon} {t.label}</button>
           ))}
         </div>
 
@@ -1045,13 +966,13 @@ export default function CalGeo() {
         {activeTab === 'gold' && (
           <>
             {/* Spot Price */}
-            <div className="card" style={{background: `linear-gradient(135deg, ${colors.gold}12, ${colors.gold}05)`, border: `1px solid ${colors.gold}30` }}>
+            <div style={{ ...base.card, background: `linear-gradient(135deg, ${colors.gold}12, ${colors.gold}05)`, border: `1px solid ${colors.gold}30` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Spot Price</span>
                 <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} className="select" style={{minWidth: '110px', flex: 'none', fontSize: '13px' }}>
+                <select value={spotPriceKarat} onChange={(e) => setSpotPriceKarat(e.target.value)} style={{ ...base.select, minWidth: '110px', flex: 'none', fontSize: '13px' }}>
                   {karatOptions.map(o => <option key={o.value} value={o.value}>{o.label} ({o.desc})</option>)}
                 </select>
                 <div style={{ flex: 1, minWidth: '120px', textAlign: 'center' }}>
@@ -1065,7 +986,7 @@ export default function CalGeo() {
                     </div>
                   )}
                 </div>
-                <button onClick={refreshSpotPrice} disabled={isRefreshing} className="btn-gold" style={{padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
+                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, ...base.btnGold, padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
               </div>
             </div>
 
@@ -1091,7 +1012,7 @@ export default function CalGeo() {
             {/* Chain */}
             <div className="card">
               <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.gold }}>⛓️ Chain</div>
-              <div className="grid2" style={{marginBottom: '10px' }}>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
                 <div><label className="label">Karat</label><select value={chainKarat} onChange={(e) => setChainKarat(e.target.value)} className="select">{karatOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 <div><label className="label">Style</label><select value={chainStyle} onChange={(e) => setChainStyle(e.target.value)} className="select">{chainStyles.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
               </div>
@@ -1110,9 +1031,9 @@ export default function CalGeo() {
             </div>
 
             {includeCharm && (
-              <div className="card" style={{border: `1px solid ${colors.gold}40` }}>
+              <div style={{ ...base.card, border: `1px solid ${colors.gold}40` }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.gold }}>🏅 Charm</div>
-                <div className="grid2" style={{marginBottom: '10px' }}>
+                <div style={{ ...base.grid2, marginBottom: '10px' }}>
                   <div><label className="label">Karat</label><select value={charmKarat} onChange={(e) => setCharmKarat(e.target.value)} className="select">{karatOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                   <div><label className="label">Style</label><select value={charmStyle} onChange={(e) => setCharmStyle(e.target.value)} className="select">{charmStyles.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 </div>
@@ -1126,7 +1047,7 @@ export default function CalGeo() {
 
             {/* Results */}
             {hasGoldInput && (
-              <div className="card" style={{background: goldGrade.bg, border: `1px solid ${goldGrade.color}50` }}>
+              <div style={{ ...base.card, background: goldGrade.bg, border: `1px solid ${goldGrade.color}50` }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                   <div style={{ fontSize: '42px', marginBottom: '4px' }}>{goldGrade.emoji}</div>
                   <div style={{ fontSize: '24px', fontWeight: '700', color: goldGrade.color }}>{goldGrade.grade}</div>
@@ -1145,7 +1066,7 @@ export default function CalGeo() {
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔒</div>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: colors.gold, marginBottom: '6px' }}>Unlock Negotiation Targets</div>
                     <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '12px' }}>Get AI-powered price points: Aggressive, Fair, and Max offers</div>
-                    <button onClick={() => setShowUpgrade(true)} className="btn-gold" style={{width: '100%' }}>⬆️ Upgrade to Pro</button>
+                    <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, ...base.btnGold, width: '100%' }}>⬆️ Upgrade to Pro</button>
                   </div>
                 ) : (
                   <>
@@ -1162,7 +1083,7 @@ export default function CalGeo() {
                     ))}
                   </>
                 )}
-                <button onClick={() => addToHistory({ type: 'gold', grade: goldGrade.grade, pct: goldCalc.pct.toFixed(1), melt: goldCalc.melt.toFixed(2), price: goldCalc.preTax.toFixed(2), karat: chainKarat, style: chainStyle })} className="btn-secondary" style={{width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
+                <button onClick={() => addToHistory({ type: 'gold', grade: goldGrade.grade, pct: goldCalc.pct.toFixed(1), melt: goldCalc.melt.toFixed(2), price: goldCalc.preTax.toFixed(2), karat: chainKarat, style: chainStyle })} style={{ ...base.btn, width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
               </div>
             )}
           </>
@@ -1172,7 +1093,7 @@ export default function CalGeo() {
         {activeTab === 'silver' && (
           <>
             {/* Spot Price */}
-            <div className="card" style={{background: `linear-gradient(135deg, #c0c0c012, #c0c0c005)`, border: `1px solid #c0c0c030` }}>
+            <div style={{ ...base.card, background: `linear-gradient(135deg, #c0c0c012, #c0c0c005)`, border: `1px solid #c0c0c030` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase' }}>Live Silver Spot Price</span>
                 <span style={{ fontSize: '9px', color: colors.muted }}>{lastUpdated && `${lastUpdated}`}</span>
@@ -1189,7 +1110,7 @@ export default function CalGeo() {
                     </div>
                   )}
                 </div>
-                <button onClick={refreshSpotPrice} disabled={isRefreshing} className="btn-secondary" style={{background: `linear-gradient(135deg, #c0c0c0, #a8a8a8)`, color: '#000', padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
+                <button onClick={refreshSpotPrice} disabled={isRefreshing} style={{ ...base.btn, background: `linear-gradient(135deg, #c0c0c0, #a8a8a8)`, color: '#000', padding: '8px 12px', flex: 'none' }}>{isRefreshing ? '⏳' : '🔄'}</button>
               </div>
             </div>
 
@@ -1207,7 +1128,7 @@ export default function CalGeo() {
             {/* Chain */}
             <div className="card">
               <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: '#c0c0c0' }}>⛓️ Silver Chain</div>
-              <div className="grid2" style={{marginBottom: '10px' }}>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
                 <div><label className="label">Purity</label><select value={chainKarat} onChange={(e) => setChainKarat(e.target.value)} className="select"><option value="999">99.9% Pure</option><option value="925">Sterling (92.5%)</option><option value="900">Coin Silver (90%)</option></select></div>
                 <div><label className="label">Style</label><select value={chainStyle} onChange={(e) => setChainStyle(e.target.value)} className="select">{chainStyles.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
               </div>
@@ -1220,7 +1141,7 @@ export default function CalGeo() {
 
             {/* Results for Silver */}
             {hasGoldInput && (
-              <div className="card" style={{background: '#c0c0c010', border: `1px solid #c0c0c030` }}>
+              <div style={{ ...base.card, background: '#c0c0c010', border: `1px solid #c0c0c030` }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                   <div style={{ fontSize: '42px', marginBottom: '4px' }}>⚪</div>
                   <div style={{ fontSize: '24px', fontWeight: '700', color: '#c0c0c0' }}>SILVER</div>
@@ -1230,7 +1151,7 @@ export default function CalGeo() {
                 <div style={{ fontSize: '11px', color: colors.muted, textAlign: 'center', marginBottom: '12px' }}>
                   Silver valuation coming soon. Current display shows melt value only.
                 </div>
-                <button onClick={() => addToHistory({ type: 'silver', melt: (parseFloat(chainWeight) * spotPriceSilver).toFixed(2), price: chainPrice, weight: chainWeight })} className="btn-secondary" style={{width: '100%', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
+                <button onClick={() => addToHistory({ type: 'silver', melt: (parseFloat(chainWeight) * spotPriceSilver).toFixed(2), price: chainPrice, weight: chainWeight })} style={{ ...base.btn, width: '100%', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
               </div>
             )}
           </>
@@ -1246,22 +1167,22 @@ export default function CalGeo() {
               </div>
             </div>
             <div className="card">
-              <div className="grid2" style={{marginBottom: '10px' }}>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
                 <div><label className="label">Stone Type</label><select value={jadeType} onChange={(e) => setJadeType(e.target.value)} className="select">{jadeTypes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 <div><label className="label">Grade</label><select value={jadeGrade} onChange={(e) => setJadeGrade(e.target.value)} className="select">{jadeGrades.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
               </div>
-              <div className="grid2" style={{marginBottom: '10px' }}>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
                 <div><label className="label">Color</label><select value={jadeColor} onChange={(e) => setJadeColor(e.target.value)} className="select">{jadeColors.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 <div><label className="label">Translucency</label><select value={jadeTranslucency} onChange={(e) => setJadeTranslucency(e.target.value)} className="select">{jadeTranslucencies.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
               </div>
-              <div className="grid2" style={{marginBottom: '10px' }}>
+              <div style={{ ...base.grid2, marginBottom: '10px' }}>
                 <div><label className="label">Item</label><select value={jadeItem} onChange={(e) => setJadeItem(e.target.value)} className="select">{jadeItems.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 <div><label className="label">Size</label><select value={jadeSize} onChange={(e) => setJadeSize(e.target.value)} className="select"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></div>
               </div>
               <div><label className="label">Asking Price ($)</label><input type="number" value={jadePrice} onChange={(e) => setJadePrice(e.target.value)} placeholder="0.00" className="input" step="0.01" /></div>
             </div>
             {parseFloat(jadePrice) > 0 && (
-              <div className="card" style={{background: jadeGradeResult.bg, border: `1px solid ${jadeGradeResult.color}50` }}>
+              <div style={{ ...base.card, background: jadeGradeResult.bg, border: `1px solid ${jadeGradeResult.color}50` }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                   <div style={{ fontSize: '42px', marginBottom: '4px' }}>{jadeGradeResult.emoji}</div>
                   <div style={{ fontSize: '24px', fontWeight: '700', color: jadeGradeResult.color }}>{jadeGradeResult.grade}</div>
@@ -1280,7 +1201,7 @@ export default function CalGeo() {
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔒</div>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: colors.jade, marginBottom: '6px' }}>Unlock Counter-Offer Strategy</div>
                     <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '12px' }}>Get calculated negotiation prices for jade purchases</div>
-                    <button onClick={() => setShowUpgrade(true)} className="btn-secondary" style={{background: `linear-gradient(135deg, ${colors.jade}, #059669)`, color: '#000', width: '100%' }}>⬆️ Upgrade to Pro</button>
+                    <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, background: `linear-gradient(135deg, ${colors.jade}, #059669)`, color: '#000', width: '100%' }}>⬆️ Upgrade to Pro</button>
                   </div>
                 ) : (
                   <>
@@ -1297,7 +1218,7 @@ export default function CalGeo() {
                     ))}
                   </>
                 )}
-                <button onClick={() => addToHistory({ type: 'jade', grade: jadeGradeResult.grade, ratio: (jadeCalc.ratio * 100).toFixed(0), expected: jadeCalc.expected.toFixed(0), price: jadeCalc.preTax.toFixed(2) })} className="btn-secondary" style={{width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
+                <button onClick={() => addToHistory({ type: 'jade', grade: jadeGradeResult.grade, ratio: (jadeCalc.ratio * 100).toFixed(0), expected: jadeCalc.expected.toFixed(0), price: jadeCalc.preTax.toFixed(2) })} style={{ ...base.btn, width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
               </div>
             )}
           </>
@@ -1308,9 +1229,9 @@ export default function CalGeo() {
           <>
             <div className="card">
               <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.scan }}>📸 AI Image Analysis</div>
-              <div className="grid2" style={{marginBottom: '12px' }}>
-                <button onClick={() => setAnalysisMode('auto')} className="btn-secondary" style={{background: analysisMode === 'auto' ? `${colors.scan}25` : 'transparent', border: `1px solid ${analysisMode === 'auto' ? colors.scan : colors.border}`, color: analysisMode === 'auto' ? colors.scan : colors.muted }}>🤖 Auto</button>
-                <button onClick={() => setAnalysisMode('guided')} className="btn-secondary" style={{background: analysisMode === 'guided' ? `${colors.scan}25` : 'transparent', border: `1px solid ${analysisMode === 'guided' ? colors.scan : colors.border}`, color: analysisMode === 'guided' ? colors.scan : colors.muted }}>👆 Guided</button>
+              <div style={{ ...base.grid2, marginBottom: '12px' }}>
+                <button onClick={() => setAnalysisMode('auto')} style={{ ...base.btn, background: analysisMode === 'auto' ? `${colors.scan}25` : 'transparent', border: `1px solid ${analysisMode === 'auto' ? colors.scan : colors.border}`, color: analysisMode === 'auto' ? colors.scan : colors.muted }}>🤖 Auto</button>
+                <button onClick={() => setAnalysisMode('guided')} style={{ ...base.btn, background: analysisMode === 'guided' ? `${colors.scan}25` : 'transparent', border: `1px solid ${analysisMode === 'guided' ? colors.scan : colors.border}`, color: analysisMode === 'guided' ? colors.scan : colors.muted }}>👆 Guided</button>
               </div>
               <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onloadend = () => setImagePreview(r.result); r.readAsDataURL(f); setAnalysisResult(null); }}} ref={fileInputRef} style={{ display: 'none' }} />
               {!imagePreview ? (
@@ -1322,14 +1243,14 @@ export default function CalGeo() {
                 <div>
                   <img src={imagePreview} alt="Preview" style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', borderRadius: '10px', marginBottom: '10px' }} />
                   <div className="grid2">
-                    <button onClick={() => { setImagePreview(null); setAnalysisResult(null); }} className="btn-secondary" style={{background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)' }}>Clear</button>
-                    <button onClick={analyzeImage} disabled={isAnalyzing} className="btn-gold">{isAnalyzing ? '⏳ Analyzing...' : '🔍 Analyze'}</button>
+                    <button onClick={() => { setImagePreview(null); setAnalysisResult(null); }} style={{ ...base.btn, background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)' }}>Clear</button>
+                    <button onClick={analyzeImage} disabled={isAnalyzing} style={{ ...base.btn, ...base.btnGold }}>{isAnalyzing ? '⏳ Analyzing...' : '🔍 Analyze'}</button>
                   </div>
                 </div>
               )}
             </div>
             {analysisResult && (
-              <div className="card" style={{background: `${colors.scan}10`, border: `1px solid ${colors.scan}40` }}>
+              <div style={{ ...base.card, background: `${colors.scan}10`, border: `1px solid ${colors.scan}40` }}>
                 <div style={{ textAlign: 'center', marginBottom: '12px' }}>
                   <div style={{ fontSize: '10px', color: colors.muted }}>CONFIDENCE</div>
                   <div style={{ fontSize: '28px', fontWeight: '700', color: colors.scan }}>{((analysisResult.confidence || 0.85) * 100).toFixed(0)}%</div>
@@ -1344,7 +1265,7 @@ export default function CalGeo() {
                   ))}
                 </div>
                 {analysisResult.warnings?.length > 0 && <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>{analysisResult.warnings.map((w, i) => <div key={i} style={{ fontSize: '11px', color: colors.warning }}>⚠️ {w}</div>)}</div>}
-                <button onClick={() => { setActiveTab(analysisResult.type || 'gold'); setAnalysisResult(null); setImagePreview(null); }} className="btn-gold" style={{width: '100%' }}>Apply & Calculate →</button>
+                <button onClick={() => { setActiveTab(analysisResult.type || 'gold'); setAnalysisResult(null); setImagePreview(null); }} style={{ ...base.btn, ...base.btnGold, width: '100%' }}>Apply & Calculate →</button>
               </div>
             )}
           </>
@@ -1363,8 +1284,8 @@ export default function CalGeo() {
                 <button
                   key={sub.id}
                   onClick={() => setToolsSubTab(sub.id)}
-                  className="btn-secondary"
                   style={{
+                    ...base.btn,
                     flex: 1,
                     padding: '10px',
                     background: toolsSubTab === sub.id ? '#f59e0b25' : 'rgba(255,255,255,0.05)',
@@ -1402,7 +1323,7 @@ export default function CalGeo() {
                 <div className="card">
                   <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: colors.list }}>🛒 Price Comparison</div>
                   {!showAddShop ? (
-                    <button onClick={() => setShowAddShop(true)} className="btn-gold" style={{width: '100%' }}>➕ Add Shop Quote</button>
+                    <button onClick={() => setShowAddShop(true)} style={{ ...base.btn, ...base.btnGold, width: '100%' }}>➕ Add Shop Quote</button>
                   ) : (
                     <>
                       <div style={{ marginBottom: '10px', position: 'relative' }}>
@@ -1420,14 +1341,14 @@ export default function CalGeo() {
                           </div>
                         )}
                       </div>
-                      <div className="grid2" style={{marginBottom: '10px' }}>
+                      <div style={{ ...base.grid2, marginBottom: '10px' }}>
                         <div><label className="label">Shop Name</label><input type="text" value={newShop.name} onChange={(e) => setNewShop({ ...newShop, name: e.target.value })} className="input" /></div>
                         <div><label className="label">Price ($)</label><input type="number" value={newShop.price} onChange={(e) => setNewShop({ ...newShop, price: e.target.value })} className="input" /></div>
                       </div>
                       <div style={{ marginBottom: '10px' }}><label className="label">Item Description</label><input type="text" value={newShop.item} onChange={(e) => setNewShop({ ...newShop, item: e.target.value })} placeholder="24K Cuban 10g" className="input" /></div>
                       <div className="grid2">
-                        <button onClick={() => { setShowAddShop(false); setNewShop({ name: '', address: '', item: '', price: '', notes: '', rating: '' }); }} className="btn-secondary" style={{background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>Cancel</button>
-                        <button onClick={addToShoppingList} className="btn-gold">Add</button>
+                        <button onClick={() => { setShowAddShop(false); setNewShop({ name: '', address: '', item: '', price: '', notes: '', rating: '' }); }} style={{ ...base.btn, background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>Cancel</button>
+                        <button onClick={addToShoppingList} style={{ ...base.btn, ...base.btnGold }}>Add</button>
                       </div>
                     </>
                   )}
@@ -1439,7 +1360,7 @@ export default function CalGeo() {
                   </div>
                 )}
                 {shoppingList.length > 0 ? shoppingList.sort((a, b) => a.price - b.price).map((item, idx) => (
-                  <div key={item.id} className="card" style={{border: item.id === bestDeal?.id ? `1px solid ${colors.success}50` : undefined, background: item.id === bestDeal?.id ? `${colors.success}08` : undefined }}>
+                  <div key={item.id} style={{ ...base.card, border: item.id === bestDeal?.id ? `1px solid ${colors.success}50` : undefined, background: item.id === bestDeal?.id ? `${colors.success}08` : undefined }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div><div style={{ fontWeight: '600' }}>{idx === 0 && shoppingList.length > 1 ? '🏆 ' : ''}{item.name}</div><div style={{ fontSize: '11px', color: colors.muted }}>{item.item}</div></div>
                       <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'monospace', color: idx === 0 ? colors.success : colors.gold }}>${item.price.toFixed(0)}</div>
@@ -1452,7 +1373,7 @@ export default function CalGeo() {
             {/* Map Sub-Tab */}
             {toolsSubTab === 'map' && (
               <>
-                <div className="card" style={{background: 'linear-gradient(135deg, #ef444410, #ef444405)', border: '1px solid #ef444430' }}>
+                <div style={{ ...base.card, background: 'linear-gradient(135deg, #ef444410, #ef444405)', border: '1px solid #ef444430' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>🗺️ Find Nearby Jewelry Shops</div>
                   <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '12px' }}>
                     {mapLoaded ? 'Search for gold and jade dealers near you' : 'Loading map...'}
@@ -1463,21 +1384,21 @@ export default function CalGeo() {
                       value={mapSearchQuery}
                       onChange={(e) => setMapSearchQuery(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && searchNearbyJewelry()}
-                      placeholder="Enter city, zipcode, or shop name..."
+                      placeholder="Search: gold dealers, jade shops..."
                       className="input"
                     />
                   </div>
                   <button
                     onClick={searchNearbyJewelry}
                     disabled={!mapLoaded || !map}
-                    className="btn-gold" style={{width: '100%' }}
+                    style={{ ...base.btn, ...base.btnGold, width: '100%' }}
                   >
                     🔍 Search Nearby
                   </button>
                 </div>
 
                 {!mapLoaded ? (
-                  <div className="card" style={{textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ ...base.card, textAlign: 'center', padding: '40px 20px' }}>
                     <div style={{ fontSize: '32px', marginBottom: '10px' }}>⏳</div>
                     <div style={{ color: colors.muted }}>Loading Google Maps...</div>
                     <div style={{ fontSize: '10px', color: colors.muted, marginTop: '8px' }}>
@@ -1498,100 +1419,24 @@ export default function CalGeo() {
                       }}
                     />
 
-                    {isSearching && (
-                      <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
-                        <div className="spinner spinner-gold" style={{ margin: '0 auto 12px' }}></div>
-                        <div style={{ fontSize: '12px', color: colors.muted }}>Searching nearby jewelry stores...</div>
-                      </div>
-                    )}
+                    <div className="card">
+                      <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '8px' }}>💡 Tips:</div>
+                      <ul style={{ fontSize: '11px', color: colors.muted, margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
+                        <li>Tap markers to see shop details</li>
+                        <li>Blue marker shows your location</li>
+                        <li>Gold diamond markers are jewelry stores</li>
+                        <li>Search radius: 5km / 3 miles</li>
+                      </ul>
+                    </div>
 
-                    {!isSearching && searchResults.length > 0 && (
+                    {markers.length > 0 && (
                       <div className="card">
-                        <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>🏪 Found {searchResults.length} shop{searchResults.length !== 1 ? 's' : ''}</span>
-                          <span style={{ fontSize: '10px', color: colors.muted, fontWeight: 'normal' }}>In current view</span>
+                        <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                          Found {markers.length} shop{markers.length !== 1 ? 's' : ''}
                         </div>
-
-                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                          {searchResults.map((place, index) => (
-                            <div
-                              key={place.place_id}
-                              onClick={() => centerOnPlace(place, index)}
-                              style={{
-                                padding: '12px',
-                                marginBottom: '8px',
-                                background: `${colors.gold}08`,
-                                border: `1px solid ${colors.gold}30`,
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = `${colors.gold}15`;
-                                e.currentTarget.style.borderColor = `${colors.gold}50`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = `${colors.gold}08`;
-                                e.currentTarget.style.borderColor = `${colors.gold}30`;
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                <div style={{
-                                  minWidth: '24px',
-                                  width: '24px',
-                                  height: '24px',
-                                  borderRadius: '50%',
-                                  background: colors.gold,
-                                  color: '#000',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold',
-                                  flexShrink: 0
-                                }}>
-                                  {index + 1}
-                                </div>
-
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '4px', color: colors.text }}>
-                                    {place.name}
-                                  </div>
-                                  <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '6px' }}>
-                                    📍 {place.vicinity}
-                                  </div>
-
-                                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                    {place.rating && (
-                                      <div style={{ fontSize: '11px', color: colors.gold, fontWeight: '600' }}>
-                                        ⭐ {place.rating}/5
-                                        {place.user_ratings_total && (
-                                          <span style={{ color: colors.muted, fontWeight: 'normal', marginLeft: '4px' }}>
-                                            ({place.user_ratings_total})
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {place.price_level && (
-                                      <div style={{ fontSize: '11px', color: colors.muted }}>
-                                        {'$'.repeat(place.price_level)}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                        <div style={{ fontSize: '10px', color: colors.muted }}>
+                          Click markers on map to view details
                         </div>
-                      </div>
-                    )}
-
-                    {!isSearching && searchResults.length === 0 && markers.length === 0 && (
-                      <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
-                        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
-                        <div style={{ fontSize: '12px', color: colors.muted, marginBottom: '4px' }}>No results yet</div>
-                        <div style={{ fontSize: '10px', color: colors.muted }}>Enter a city, zipcode, or click "Search Nearby"</div>
                       </div>
                     )}
                   </>
@@ -1604,12 +1449,12 @@ export default function CalGeo() {
         {/* ========== GLOSSARY TAB ========== */}
         {activeTab === 'glossary' && (
           <>
-            <div className="card" style={{background: 'linear-gradient(135deg, #8b5cf610, #8b5cf605)', border: '1px solid #8b5cf630', marginBottom: '12px' }}>
+            <div style={{ ...base.card, background: 'linear-gradient(135deg, #8b5cf610, #8b5cf605)', border: '1px solid #8b5cf630', marginBottom: '12px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#8b5cf6', marginBottom: '6px' }}>📖 Jewelry Terms & Definitions</div>
               <div style={{ fontSize: '11px', color: colors.muted }}>Essential terminology for gold and jade valuation</div>
             </div>
             {glossary.map((item, idx) => (
-              <div key={idx} className="card" style={{borderLeft: `3px solid ${idx % 2 === 0 ? colors.gold : colors.jade}` }}>
+              <div key={idx} style={{ ...base.card, borderLeft: `3px solid ${idx % 2 === 0 ? colors.gold : colors.jade}` }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '6px' }}>{item.term}</div>
                 <div style={{ fontSize: '12px', color: colors.muted, lineHeight: '1.5' }}>{item.definition}</div>
               </div>
@@ -1620,7 +1465,7 @@ export default function CalGeo() {
         {/* ========== GUIDE TAB ========== */}
         {activeTab === 'guide' && (
           <>
-            <div className="card" style={{background: 'linear-gradient(135deg, #06b6d410, #06b6d405)', border: '1px solid #06b6d430', marginBottom: '12px' }}>
+            <div style={{ ...base.card, background: 'linear-gradient(135deg, #06b6d410, #06b6d405)', border: '1px solid #06b6d430', marginBottom: '12px' }}>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#06b6d4', marginBottom: '8px' }}>📋 How to Use CalGeo</div>
               <div style={{ fontSize: '11px', color: colors.muted }}>Complete guide to jewelry valuation with CalGeo</div>
             </div>
@@ -1708,7 +1553,7 @@ export default function CalGeo() {
             </div>
 
             {/* Tips & Best Practices */}
-            <div className="card" style={{background: 'rgba(6,182,212,0.1)', border: '1px solid #06b6d440' }}>
+            <div style={{ ...base.card, background: 'rgba(6,182,212,0.1)', border: '1px solid #06b6d440' }}>
               <div style={{ fontSize: '14px', fontWeight: '600', color: '#06b6d4', marginBottom: '10px' }}>💡 Pro Tips</div>
               <ul style={{ fontSize: '12px', color: colors.text, lineHeight: '1.7', paddingLeft: '20px', margin: 0 }}>
                 <li><strong>Always weigh gold yourself</strong> - don't trust seller's scale</li>
@@ -1723,13 +1568,13 @@ export default function CalGeo() {
             </div>
 
             {/* Upgrade CTA */}
-            <div className="card" style={{background: `linear-gradient(135deg, ${colors.gold}15, ${colors.jade}15)`, border: `1px solid ${colors.gold}40`, textAlign: 'center' }}>
+            <div style={{ ...base.card, background: `linear-gradient(135deg, ${colors.gold}15, ${colors.jade}15)`, border: `1px solid ${colors.gold}40`, textAlign: 'center' }}>
               <div style={{ fontSize: '24px', marginBottom: '8px' }}>💎</div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: colors.gold, marginBottom: '8px' }}>Unlock Full Power</div>
               <div style={{ fontSize: '12px', color: colors.muted, marginBottom: '12px' }}>
                 Upgrade to access negotiation targets, unlimited AI scans, and advanced features
               </div>
-              <button onClick={() => setShowUpgrade(true)} className="btn-gold" style={{width: '100%', fontSize: '14px' }}>
+              <button onClick={() => setShowUpgrade(true)} style={{ ...base.btn, ...base.btnGold, width: '100%', fontSize: '14px' }}>
                 ⬆️ View Upgrade Options
               </button>
             </div>
@@ -1801,7 +1646,7 @@ export default function CalGeo() {
               </div>
             </div>
 
-            <button onClick={() => setShowUpgrade(false)} className="btn-secondary" style={{width: '100%', marginTop: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
+            <button onClick={() => setShowUpgrade(false)} style={{ ...base.btn, width: '100%', marginTop: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
           </div>
         </div>
       )}
@@ -1812,7 +1657,7 @@ export default function CalGeo() {
           <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>ℹ️ About CalGeo</div>
-              <button onClick={() => setShowAbout(false)} className="btn-secondary" style={{padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
+              <button onClick={() => setShowAbout(false)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -1870,7 +1715,7 @@ export default function CalGeo() {
           <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>⚙️ Settings</div>
-              <button onClick={() => setShowSettings(false)} className="btn-secondary" style={{padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
+              <button onClick={() => setShowSettings(false)} style={{ ...base.btn, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
             </div>
 
             {/* THEME SELECTION */}
@@ -1879,8 +1724,8 @@ export default function CalGeo() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => setTheme('dark')}
-                  className="btn-secondary"
                   style={{
+                    ...base.btn,
                     flex: 1,
                     padding: '12px',
                     background: theme === 'dark' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
@@ -1893,8 +1738,8 @@ export default function CalGeo() {
                 </button>
                 <button
                   onClick={() => setTheme('light')}
-                  className="btn-secondary"
                   style={{
+                    ...base.btn,
                     flex: 1,
                     padding: '12px',
                     background: theme === 'light' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
@@ -1907,8 +1752,8 @@ export default function CalGeo() {
                 </button>
                 <button
                   onClick={() => setTheme('system')}
-                  className="btn-secondary"
                   style={{
+                    ...base.btn,
                     flex: 1,
                     padding: '12px',
                     background: theme === 'system' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
@@ -1931,8 +1776,8 @@ export default function CalGeo() {
               <select
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
-                className="select"
                 style={{
+                  ...base.input,
                   width: '100%',
                   padding: '12px',
                   background: colors.inputBg,
@@ -1969,7 +1814,7 @@ export default function CalGeo() {
                 <CalGeoLogo size={28} />
                 <span style={{ fontSize: '18px', fontWeight: '700', background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Menu</span>
               </div>
-              <button onClick={() => setShowMenu(false)} className="btn-secondary" style={{padding: '6px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, fontSize: '16px' }}>✕</button>
+              <button onClick={() => setShowMenu(false)} style={{ ...base.btn, padding: '6px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, fontSize: '16px' }}>✕</button>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
@@ -1983,7 +1828,7 @@ export default function CalGeo() {
                 { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } },
                 { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } }
               ].map((item, idx) => (
-                <button key={idx} onClick={item.action} className="btn-secondary" style={{width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
+                <button key={idx} onClick={item.action} style={{ ...base.btn, width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
               ))}
             </div>
 
@@ -1996,9 +1841,9 @@ export default function CalGeo() {
                 {userTier !== 'expert' && <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>{userTier === 'free' ? `${MAX_FREE_ANALYSES - analysisCount} scans remaining` : `${50 - analysisCount} scans remaining`}</div>}
               </div>
               {isLoggedIn ? (
-                <button onClick={() => { handleLogout(); setShowMenu(false); }} className="btn-secondary" style={{width: '100%', marginTop: '8px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px' }}>🚪 Logout</button>
+                <button onClick={() => { handleLogout(); setShowMenu(false); }} style={{ ...base.btn, width: '100%', marginTop: '8px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px' }}>🚪 Logout</button>
               ) : (
-                <button onClick={() => { setShowMenu(false); setShowLogin(true); }} className="btn-secondary" style={{width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
+                <button onClick={() => { setShowMenu(false); setShowLogin(true); }} style={{ ...base.btn, width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
               )}
             </div>
 

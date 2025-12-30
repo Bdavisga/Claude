@@ -1,8 +1,50 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
+  // Try GoldAPI.io first (official LBMA/COMEX data)
+  const apiKey = process.env.GOLDAPI_KEY;
+
+  if (apiKey) {
+    try {
+      // Fetch both gold (XAU) and silver (XAG) prices in parallel
+      const [goldResponse, silverResponse] = await Promise.all([
+        fetch('https://www.goldapi.io/api/XAU/USD', {
+          headers: { 'x-access-token': apiKey }
+        }),
+        fetch('https://www.goldapi.io/api/XAG/USD', {
+          headers: { 'x-access-token': apiKey }
+        })
+      ]);
+
+      if (goldResponse.ok && silverResponse.ok) {
+        const goldData = await goldResponse.json();
+        const silverData = await silverResponse.json();
+
+        // GoldAPI.io returns price per troy ounce
+        // Convert to price per gram (1 troy oz = 31.1035 grams)
+        if (goldData?.price && silverData?.price) {
+          const goldPerGram = goldData.price / 31.1035;
+          const silverPerGram = silverData.price / 31.1035;
+
+          return NextResponse.json({
+            price_per_gram: parseFloat(goldPerGram.toFixed(2)),
+            silver_per_gram: parseFloat(silverPerGram.toFixed(2)),
+            source: 'goldapi.io',
+            timestamp: goldData.timestamp || new Date().toISOString(),
+            raw_data: {
+              gold_oz: goldData.price,
+              silver_oz: silverData.price
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('GoldAPI.io error:', error);
+    }
+  }
+
+  // Fallback to goldprice.org free API (no key required)
   try {
-    // Try goldprice.org free API (no key required, real-time prices)
     const response = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
 
     if (response.ok) {

@@ -1,33 +1,34 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import "./styles/calgeo-design-system.css";
 
 export const metadata = {
   title: "CalGeo - Jewelry Valuation App",
   description: "Professional jewelry valuation for gold, silver, and jade",
-  viewport: {
+  icons: {
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'CalGeo',
+  },
+  manifest: '/manifest.json',
+};
+
+export function generateViewport() {
+  return {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-  },
-};
+  };
+}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body>
         {children}
       </body>
     </html>

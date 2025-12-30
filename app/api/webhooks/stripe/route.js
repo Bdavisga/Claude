@@ -5,7 +5,7 @@
 
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../../lib/supabase';
+import { supabaseAdmin } from '../../../../lib/supabase-admin';
 
 export async function POST(request) {
   // Initialize Stripe with API key check
