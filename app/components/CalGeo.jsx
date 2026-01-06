@@ -1004,6 +1004,40 @@ export default function CalGeo() {
         />
       )}
 
+      {/* SWIPEABLE EDGE TAB (Mobile only, when sidebar hidden) */}
+      {!showSidebar && isMobile && (
+        <div
+          onClick={() => setShowSidebar(true)}
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '20px',
+            height: '80px',
+            background: `linear-gradient(90deg, ${colors.gold}40 0%, ${colors.gold}20 100%)`,
+            borderRadius: '0 8px 8px 0',
+            zIndex: 998,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid ${colors.gold}50`,
+            borderLeft: 'none',
+            boxShadow: `2px 0 8px ${colors.gold}30`,
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <div style={{
+            width: '3px',
+            height: '30px',
+            background: `linear-gradient(180deg, transparent 0%, ${colors.gold} 50%, transparent 100%)`,
+            borderRadius: '2px'
+          }} />
+        </div>
+      )}
+
       {/* LEFT SIDEBAR */}
       <aside style={{
         position: 'fixed',
@@ -1076,32 +1110,7 @@ export default function CalGeo() {
         marginLeft: isMobile ? '0' : '70px',
         gap: '12px'
       }}>
-        {/* Left: Sidebar Toggle (Mobile only) */}
-        {isMobile && (
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="btn-icon"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '36px',
-              height: '36px',
-              background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${colors.gold}30`,
-              borderRadius: '8px',
-              flexShrink: 0
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
-            </div>
-          </button>
-        )}
-
-        {/* Center/Left: Logo */}
+        {/* Center: Logo */}
         <div style={{
           position: isMobile ? 'relative' : 'absolute',
           left: isMobile ? 'auto' : '50%',
