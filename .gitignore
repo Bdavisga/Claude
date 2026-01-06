@@ -42,3 +42,4 @@ VERCEL_ENV_VARS.md
 *.tsbuildinfo
 next-env.d.ts
 VERCEL_ENV_VARIABLES.txt
+public/stripe_backup_code-2.txt

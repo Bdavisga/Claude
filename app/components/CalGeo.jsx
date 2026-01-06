@@ -2199,41 +2199,78 @@ export default function CalGeo() {
               <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>Upgrade CalGeo</div>
             </div>
 
-            {/* Current Tier Display */}
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '12px', marginBottom: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: colors.muted }}>Current Tier</div>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: userTier === 'expert' ? colors.gold : userTier === 'pro' ? '#3b82f6' : '#888', textTransform: 'uppercase' }}>{userTier}</div>
-            </div>
-
-            {/* Pro Tier */}
-            <div
-              onClick={() => { setShowUpgrade(false); initiateCheckout('pro', userId); }}
-              style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid #3b82f6', borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '16px' }}>⭐ Pro</div>
-                  <div style={{ fontSize: '10px', color: colors.muted }}>25 scans • History • Targets</div>
+            {/* LOGIN REQUIRED MESSAGE - Show if not logged in */}
+            {!isLoggedIn ? (
+              <>
+                <div style={{ background: `${colors.gold}15`, border: `1px solid ${colors.gold}50`, borderRadius: '12px', padding: '20px', marginBottom: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔐</div>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: colors.gold, marginBottom: '8px' }}>Login Required</div>
+                  <div style={{ fontSize: '12px', color: colors.muted, lineHeight: '1.6' }}>
+                    Create an account or login to upgrade and unlock all premium features.
+                  </div>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>$4.99<span style={{ fontSize: '11px' }}>/mo</span></div>
-              </div>
-            </div>
-
-            {/* Expert Tier */}
-            <div
-              onClick={() => { setShowUpgrade(false); initiateCheckout('expert', userId); }}
-              style={{ background: `${colors.gold}15`, border: `2px solid ${colors.gold}`, borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: '700', color: colors.gold, fontSize: '16px' }}>💎 Expert</div>
-                  <div style={{ fontSize: '10px', color: colors.muted }}>Unlimited everything</div>
+                <button
+                  onClick={() => { setShowUpgrade(false); setShowAuthModal(true); }}
+                  className="btn-gold"
+                  style={{ width: '100%', marginBottom: '10px', fontSize: '14px', padding: '14px' }}
+                >
+                  🔐 Login / Sign Up
+                </button>
+                <button onClick={() => setShowUpgrade(false)} className="btn-secondary" style={{width: '100%', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
+              </>
+            ) : (
+              <>
+                {/* Current Tier Display */}
+                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '12px', marginBottom: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: colors.muted }}>Current Tier</div>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: userTier === 'expert' ? colors.gold : userTier === 'pro' ? '#3b82f6' : '#888', textTransform: 'uppercase' }}>{userTier}</div>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>$9.99<span style={{ fontSize: '11px' }}>/mo</span></div>
-              </div>
-            </div>
 
-            <button onClick={() => setShowUpgrade(false)} className="btn-secondary" style={{width: '100%', marginTop: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
+                {/* Pro Tier */}
+                <div
+                  onClick={() => {
+                    if (!userId) {
+                      alert('Please login to upgrade');
+                      return;
+                    }
+                    setShowUpgrade(false);
+                    initiateCheckout('pro', userId);
+                  }}
+                  style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid #3b82f6', borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '16px' }}>⭐ Pro</div>
+                      <div style={{ fontSize: '10px', color: colors.muted }}>25 scans • History • Targets</div>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>$4.99<span style={{ fontSize: '11px' }}>/mo</span></div>
+                  </div>
+                </div>
+
+                {/* Expert Tier */}
+                <div
+                  onClick={() => {
+                    if (!userId) {
+                      alert('Please login to upgrade');
+                      return;
+                    }
+                    setShowUpgrade(false);
+                    initiateCheckout('expert', userId);
+                  }}
+                  style={{ background: `${colors.gold}15`, border: `2px solid ${colors.gold}`, borderRadius: '12px', padding: '14px', marginBottom: '10px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '700', color: colors.gold, fontSize: '16px' }}>💎 Expert</div>
+                      <div style={{ fontSize: '10px', color: colors.muted }}>Unlimited everything</div>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>$9.99<span style={{ fontSize: '11px' }}>/mo</span></div>
+                  </div>
+                </div>
+
+                <button onClick={() => setShowUpgrade(false)} className="btn-secondary" style={{width: '100%', marginTop: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.muted }}>Cancel</button>
+              </>
+            )}
           </div>
         </div>
       )}
