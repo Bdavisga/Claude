@@ -2404,6 +2404,60 @@ export default function CalGeo() {
               <button onClick={() => setShowMenu(false)} className="btn-secondary" style={{padding: '6px 10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, fontSize: '16px' }}>✕</button>
             </div>
 
+            {/* PREMIUM UPGRADE COUPON */}
+            <div
+              onClick={() => { setShowMenu(false); setShowUpgrade(true); }}
+              style={{
+                marginBottom: '24px',
+                padding: '20px',
+                background: `linear-gradient(135deg, ${colors.gold}25 0%, ${colors.gold}15 100%)`,
+                border: `2px solid ${colors.gold}`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                boxShadow: `0 0 20px ${colors.gold}40, 0 4px 12px rgba(0,0,0,0.3)`,
+                animation: 'pulse-glow 2s ease-in-out infinite',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <style>{`
+                @keyframes pulse-glow {
+                  0%, 100% {
+                    box-shadow: 0 0 20px ${colors.gold}40, 0 4px 12px rgba(0,0,0,0.3);
+                  }
+                  50% {
+                    box-shadow: 0 0 30px ${colors.gold}60, 0 6px 16px rgba(0,0,0,0.4);
+                  }
+                }
+              `}</style>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>💎</div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: colors.gold, marginBottom: '6px', letterSpacing: '0.5px' }}>
+                Get Expert Now!
+              </div>
+              <div style={{ fontSize: '11px', color: colors.muted, marginBottom: '10px' }}>
+                Unlimited scans • All features
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: colors.gold }}>
+                $9.99<span style={{ fontSize: '14px', fontWeight: '500' }}>/mo</span>
+              </div>
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                background: colors.success,
+                color: '#000',
+                fontSize: '9px',
+                fontWeight: '700',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Best Value
+              </div>
+            </div>
+
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
               {[
@@ -2412,7 +2466,6 @@ export default function CalGeo() {
                 { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
                 { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
                 { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
-                { label: '💎 Upgrade Tier', action: () => { setShowMenu(false); setShowUpgrade(true); } },
                 { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } }
               ].map((item, idx) => (
                 <button key={idx} onClick={item.action} className="btn-secondary" style={{width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
