@@ -64,7 +64,7 @@ export async function POST(request) {
     // Build checkout session configuration
     const sessionConfig = {
       mode: 'subscription',
-      payment_method_types: ['card', 'apple_pay', 'google_pay'],
+      payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
 
       // URLs - update with your domain
