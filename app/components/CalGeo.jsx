@@ -45,6 +45,7 @@ export default function CalGeo() {
   const [userTier, setUserTier] = useState('free');
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false); // Mobile sidebar toggle
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -978,10 +979,23 @@ export default function CalGeo() {
   // ==================== RENDER ====================
   return (
     <div className="bg-primary" style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
+      {/* SIDEBAR OVERLAY (Mobile only) */}
+      {showSidebar && window.innerWidth < 768 && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 999
+          }}
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
       {/* LEFT SIDEBAR */}
       <aside style={{
         position: 'fixed',
-        left: 0,
+        left: showSidebar || window.innerWidth >= 768 ? 0 : '-70px',
         top: 0,
         bottom: 0,
         width: '70px',
@@ -993,7 +1007,8 @@ export default function CalGeo() {
         alignItems: 'center',
         paddingTop: '80px',
         gap: '8px',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        transition: 'left 0.3s ease'
       }}>
         {[
           { id: 'gold', label: 'Gold', color: colors.gold, useText: true },
@@ -1006,7 +1021,10 @@ export default function CalGeo() {
         ].map(t => (
           <button
             key={t.id}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => {
+              setActiveTab(t.id);
+              if (window.innerWidth < 768) setShowSidebar(false);
+            }}
             title={t.label}
             style={{
               width: '50px',
@@ -1034,7 +1052,7 @@ export default function CalGeo() {
       <header style={{
         background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
         borderBottom: '1px solid var(--primary-600)',
-        padding: 'var(--space-md)',
+        padding: window.innerWidth < 768 ? '12px' : 'var(--space-md)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1043,35 +1061,71 @@ export default function CalGeo() {
         zIndex: 999,
         backdropFilter: 'blur(12px)',
         boxShadow: 'var(--shadow-sm)',
-        marginLeft: '70px'
+        marginLeft: window.innerWidth >= 768 ? '70px' : '0',
+        gap: '12px'
       }}>
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          <CalGeoLogo size={34} />
-        </div>
-        <div style={{ flex: 1 }}></div>
-        <div className="flex items-center gap-sm">
-          {isLoggedIn && user ? (
-            <>
-              <div className="flex items-center gap-sm">
-                <span className="text-xs text-secondary font-semibold" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</span>
-                <span className={userTier === 'expert' ? 'badge badge-expert' : userTier === 'pro' ? 'badge badge-pro' : 'badge badge-free'}>{userTier}</span>
-              </div>
-              <button onClick={handleLogout} className="btn-secondary btn-sm" style={{ background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}>Logout</button>
-            </>
-          ) : (
-            <button onClick={() => setShowAuthModal(true)} className="btn-outline btn-sm" style={{ borderColor: 'var(--accent-500)', color: 'var(--accent-500)' }}>Login</button>
-          )}
-          <button onClick={() => setShowMenu(!showMenu)} className="btn-icon" style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
-            <div style={{ width: '18px', height: '2px', background: 'var(--accent-500)', borderRadius: '2px' }}></div>
+        {/* Left: Sidebar Toggle (Mobile only) */}
+        {window.innerWidth < 768 && (
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="btn-icon"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              background: 'rgba(255,255,255,0.05)',
+              border: `1px solid ${colors.gold}30`,
+              borderRadius: '8px',
+              flexShrink: 0
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+              <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+            </div>
           </button>
+        )}
+
+        {/* Center/Left: Logo */}
+        <div style={{
+          position: window.innerWidth >= 768 ? 'absolute' : 'relative',
+          left: window.innerWidth >= 768 ? '50%' : 'auto',
+          transform: window.innerWidth >= 768 ? 'translateX(-50%)' : 'none',
+          flex: window.innerWidth < 768 ? '1' : 'auto'
+        }}>
+          <CalGeoLogo size={window.innerWidth < 768 ? 28 : 34} />
         </div>
+
+        {/* Right: Menu button */}
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="btn-icon"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '36px',
+            height: '36px',
+            background: 'rgba(255,255,255,0.05)',
+            border: `1px solid ${colors.gold}30`,
+            borderRadius: '8px',
+            flexShrink: 0
+          }}
+        >
+          <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+          <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+          <div style={{ width: '16px', height: '2px', background: colors.gold, borderRadius: '2px' }}></div>
+        </button>
       </header>
 
       <main style={{
-        marginLeft: '70px',
-        width: 'calc(100% - 70px)',
+        marginLeft: window.innerWidth >= 768 ? '70px' : '0',
+        width: window.innerWidth >= 768 ? 'calc(100% - 70px)' : '100%',
         display: 'flex',
         justifyContent: 'center',
         padding: 'var(--space-md) var(--space-md) 100px'
@@ -1999,8 +2053,8 @@ export default function CalGeo() {
 
       {/* MENU DRAWER */}
       {showMenu && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100 }} onClick={() => setShowMenu(false)}>
-          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={() => setShowMenu(false)}>
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto', zIndex: 1101 }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CalGeoLogo size={28} />
@@ -2027,7 +2081,12 @@ export default function CalGeo() {
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Account</div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
-                {isLoggedIn && <div style={{ fontSize: '11px', color: colors.gold, marginBottom: '8px', fontWeight: '600' }}>👤 {username}</div>}
+                {isLoggedIn && user && (
+                  <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${colors.border}` }}>
+                    <div style={{ fontSize: '11px', color: colors.gold, marginBottom: '4px', fontWeight: '600' }}>👤 {user.email}</div>
+                    {username && <div style={{ fontSize: '10px', color: colors.muted }}>@{username}</div>}
+                  </div>
+                )}
                 <div style={{ fontSize: '12px', color: colors.muted, marginBottom: '4px' }}>Current Tier</div>
                 <div style={{ fontSize: '16px', fontWeight: '600', color: userTier === 'expert' ? colors.gold : userTier === 'pro' ? '#3b82f6' : '#888', textTransform: 'uppercase' }}>{userTier}</div>
                 {userTier !== 'expert' && <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>{userTier === 'free' ? `${MAX_FREE_ANALYSES - analysisCount} scans remaining` : `${50 - analysisCount} scans remaining`}</div>}
@@ -2035,7 +2094,7 @@ export default function CalGeo() {
               {isLoggedIn ? (
                 <button onClick={() => { handleLogout(); setShowMenu(false); }} className="btn-secondary" style={{width: '100%', marginTop: '8px', background: 'rgba(239,68,68,0.15)', color: colors.danger, border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px' }}>🚪 Logout</button>
               ) : (
-                <button onClick={() => { setShowMenu(false); setShowLogin(true); }} className="btn-secondary" style={{width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
+                <button onClick={() => { setShowMenu(false); setShowAuthModal(true); }} className="btn-secondary" style={{width: '100%', marginTop: '8px', background: 'rgba(212,175,55,0.15)', color: colors.gold, border: `1px solid ${colors.gold}40`, fontSize: '12px' }}>🔐 Login</button>
               )}
             </div>
 
