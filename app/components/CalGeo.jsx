@@ -24,18 +24,19 @@ import '../styles/calgeo-design-system.css';
 
 // ==================== LOGO COMPONENT ====================
 const CalGeoLogo = ({ size = 34 }) => (
-  <Image
-    src="/calgeo-logo-512.png"
-    alt="CalGeo Logo"
-    width={size}
-    height={size}
-    priority
+  <div
     style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      objectFit: 'contain'
+      fontSize: `${size * 0.7}px`,
+      fontWeight: '800',
+      background: 'linear-gradient(135deg, #D4AF37 0%, #f4d03f 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      letterSpacing: '-0.5px',
     }}
-  />
+  >
+    CalGeo
+  </div>
 );
 
 export default function CalGeo() {
@@ -47,6 +48,7 @@ export default function CalGeo() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
   const [analysisCount, setAnalysisCount] = useState(0);
   const MAX_FREE_ANALYSES = 3;
   const [toolsSubTab, setToolsSubTab] = useState('history'); // 'history', 'compare', 'map'
@@ -72,8 +74,6 @@ export default function CalGeo() {
 
   // First Visit Splash
   const [showSplash, setShowSplash] = useState(false);
-  const [splashEmail, setSplashEmail] = useState('');
-  const [splashStep, setSplashStep] = useState(1); // 1 = offer, 2 = email capture
 
   // Spot Price
   const [activeMetal, setActiveMetal] = useState('gold'); // 'gold' or 'silver'
@@ -261,14 +261,13 @@ export default function CalGeo() {
   // First visit splash detection
   useEffect(() => {
     const hasSeenSplash = localStorage.getItem('calgeo_seen_splash');
-    const hasEmail = localStorage.getItem('calgeo_user_email');
 
-    // Show splash if first visit and no email captured yet
-    if (!hasSeenSplash && !hasEmail) {
-      // Delay splash by 1 second for better UX
+    // Show splash if first visit
+    if (!hasSeenSplash) {
+      // Delay splash by 30 seconds to let users explore first
       const timer = setTimeout(() => {
         setShowSplash(true);
-      }, 1000);
+      }, 30000);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -818,15 +817,7 @@ export default function CalGeo() {
 
   // Handle first-visit splash discount checkout
   const handleSplashCheckout = async () => {
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(splashEmail)) {
-      alert('Please enter a valid email address');
-      return;
-    }
-
-    // Save email and user profile
-    localStorage.setItem('calgeo_user_email', splashEmail);
+    // Mark splash as seen
     localStorage.setItem('calgeo_seen_splash', 'true');
     localStorage.setItem('calgeo_user_created', new Date().toISOString());
 
@@ -835,7 +826,7 @@ export default function CalGeo() {
 
     // Call checkout with discount parameter
     try {
-      console.log('Initiating first-visit discount checkout for:', splashEmail);
+      console.log('Initiating first-visit discount checkout');
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -987,6 +978,58 @@ export default function CalGeo() {
   // ==================== RENDER ====================
   return (
     <div className="bg-primary" style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
+      {/* LEFT SIDEBAR */}
+      <aside style={{
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: '70px',
+        background: 'linear-gradient(180deg, var(--bg-secondary) 0%, #0a0a10 100%)',
+        borderRight: `1px solid ${colors.gold}30`,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        paddingTop: '80px',
+        gap: '8px',
+        overflowY: 'auto'
+      }}>
+        {[
+          { id: 'gold', label: 'Gold', color: colors.gold, useText: true },
+          { id: 'silver', label: 'Silver', color: '#c0c0c0', useText: true },
+          { id: 'jade', label: 'Jade', color: colors.jade, useText: true },
+          { id: 'scan', label: 'Scan', color: colors.scan, useText: true },
+          { id: 'tools', icon: '🔧', label: 'Tools', color: '#f59e0b', useText: false },
+          { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6', useText: false },
+          { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4', useText: false }
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            title={t.label}
+            style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '12px',
+              border: activeTab === t.id ? `2px solid ${t.color}` : '1px solid rgba(255,255,255,0.1)',
+              background: activeTab === t.id ? `${t.color}20` : 'rgba(255,255,255,0.05)',
+              color: activeTab === t.id ? t.color : colors.muted,
+              fontSize: t.useText ? '11px' : '24px',
+              fontWeight: t.useText ? '700' : 'normal',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: activeTab === t.id ? `0 0 20px ${t.color}40` : 'none'
+            }}
+          >
+            {t.useText ? t.label : t.icon}
+          </button>
+        ))}
+      </aside>
+
       {/* HEADER */}
       <header style={{
         background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
@@ -997,14 +1040,15 @@ export default function CalGeo() {
         alignItems: 'center',
         position: 'sticky',
         top: 0,
-        zIndex: 'var(--z-sticky)',
+        zIndex: 999,
         backdropFilter: 'blur(12px)',
-        boxShadow: 'var(--shadow-sm)'
+        boxShadow: 'var(--shadow-sm)',
+        marginLeft: '70px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
           <CalGeoLogo size={34} />
-          <span style={{ fontSize: '22px', fontWeight: '700', background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CalGeo</span>
         </div>
+        <div style={{ flex: 1 }}></div>
         <div className="flex items-center gap-sm">
           {isLoggedIn && user ? (
             <>
@@ -1025,22 +1069,14 @@ export default function CalGeo() {
         </div>
       </header>
 
-      <main style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: 'var(--space-md) var(--space-md) 100px' }}>
-        {/* TABS - Condensed */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          {[
-            { id: 'gold', icon: '🥇', label: 'Gold', color: colors.gold },
-            { id: 'silver', icon: '⚪', label: 'Silver', color: '#c0c0c0' },
-            { id: 'jade', icon: '💚', label: 'Jade', color: colors.jade },
-            { id: 'scan', icon: '📸', label: 'Scan', color: colors.scan },
-            { id: 'tools', icon: '🔧', label: 'Tools', color: '#f59e0b' },
-            { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6' },
-            { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4' }
-          ].map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} className="btn-secondary" style={{padding: '8px 12px', background: activeTab === t.id ? t.color : 'rgba(255,255,255,0.05)', color: activeTab === t.id ? '#000' : colors.muted, fontSize: '11px', fontWeight: '600', flex: '1 1 auto', minWidth: '60px' }}>{t.icon} {t.label}</button>
-          ))}
-        </div>
-
+      <main style={{
+        marginLeft: '70px',
+        width: 'calc(100% - 70px)',
+        display: 'flex',
+        justifyContent: 'center',
+        padding: 'var(--space-md) var(--space-md) 100px'
+      }}>
+        <div style={{ width: '100%', maxWidth: '600px' }}>
         {/* ========== GOLD TAB ========== */}
         {activeTab === 'gold' && (
           <>
@@ -1756,6 +1792,7 @@ export default function CalGeo() {
             © 2025 Marketsavage. All rights reserved.
           </div>
         </div>
+        </div>
       </main>
 
       {/* UPGRADE MODAL - Triggers Stripe Checkout */}
@@ -2019,265 +2056,81 @@ export default function CalGeo() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(10,10,20,0.98) 100%)',
+            background: 'rgba(0, 0, 0, 0.8)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            padding: '20px',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(4px)',
           }}
           onClick={handleSplashDismiss}
         >
           <div
             style={{
               background: 'linear-gradient(180deg, #1a1a28 0%, #0f0f18 100%)',
-              borderRadius: '24px',
-              maxWidth: '420px',
-              maxHeight: '75vh',
-              width: '100%',
+              borderRadius: '16px',
+              width: '340px',
               border: `2px solid ${colors.gold}`,
-              boxShadow: `0 0 60px ${colors.gold}40, 0 20px 40px rgba(0,0,0,0.5)`,
-              position: 'relative',
-              overflow: 'auto',
+              boxShadow: `0 0 40px ${colors.gold}30, 0 10px 30px rgba(0,0,0,0.5)`,
+              padding: '32px 24px 24px',
+              textAlign: 'center',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Dismiss Button */}
+            {/* Offer Content */}
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎉</div>
+            <div
+              style={{
+                fontSize: '36px',
+                fontWeight: '800',
+                color: colors.gold,
+                marginBottom: '8px',
+              }}
+            >
+              Save 20%
+            </div>
+            <div style={{ fontSize: '15px', color: '#fff', marginBottom: '6px' }}>
+              CalGeo Pro - First Month
+            </div>
+            <div style={{ fontSize: '18px', color: colors.muted, marginBottom: '24px' }}>
+              <span style={{ textDecoration: 'line-through' }}>$4.99</span>
+              <span style={{ fontSize: '24px', color: colors.gold, fontWeight: '700', marginLeft: '10px' }}>$3.99</span>
+            </div>
+
+            {/* Buttons */}
+            <button
+              onClick={handleSplashCheckout}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: `linear-gradient(135deg, ${colors.gold} 0%, #c9a947 100%)`,
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: '700',
+                color: '#000',
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.gold}40`,
+                marginBottom: '10px',
+              }}
+            >
+              Save 20%
+            </button>
+
             <button
               onClick={handleSplashDismiss}
               style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'rgba(255,255,255,0.1)',
+                width: '100%',
+                padding: '12px',
+                background: 'transparent',
                 border: 'none',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                color: '#fff',
-                fontSize: '18px',
+                fontSize: '13px',
+                color: colors.muted,
                 cursor: 'pointer',
-                zIndex: 10,
               }}
             >
-              ✕
+              No Thank You
             </button>
-
-            {/* Step 1: Special Offer */}
-            {splashStep === 1 && (
-              <div style={{ padding: '40px 28px 28px' }}>
-                {/* Attention Grabber */}
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
-                  <div
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: '800',
-                      background: `linear-gradient(90deg, ${colors.gold}, #f4d03f)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    Welcome to CalGeo!
-                  </div>
-                  <div style={{ fontSize: '14px', color: colors.muted }}>
-                    Professional Jewelry Valuation
-                  </div>
-                </div>
-
-                {/* Special Offer Badge */}
-                <div
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.gold}20, ${colors.gold}10)`,
-                    border: `2px solid ${colors.gold}`,
-                    borderRadius: '16px',
-                    padding: '20px',
-                    marginBottom: '24px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: '12px', color: colors.gold, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                    🔥 Limited Time Offer
-                  </div>
-                  <div style={{ fontSize: '42px', fontWeight: '800', color: colors.gold, lineHeight: '1', marginBottom: '6px' }}>
-                    20% OFF
-                  </div>
-                  <div style={{ fontSize: '15px', color: '#fff', fontWeight: '600' }}>
-                    CalGeo Pro - First Month
-                  </div>
-                  <div style={{ fontSize: '20px', color: colors.muted, marginTop: '8px' }}>
-                    <span style={{ textDecoration: 'line-through' }}>$4.99</span>
-                    <span style={{ fontSize: '28px', color: colors.gold, fontWeight: '700', marginLeft: '12px' }}>$3.99</span>
-                  </div>
-                </div>
-
-                {/* Benefits */}
-                <div style={{ marginBottom: '24px' }}>
-                  {[
-                    '✓ 25 AI scans per month',
-                    '✓ Full calculation history',
-                    '✓ Negotiation targets',
-                    '✓ All jade colors unlocked',
-                    '✓ Shopping list comparisons',
-                  ].map((benefit, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        fontSize: '13px',
-                        color: '#e5e5e5',
-                        padding: '8px 0',
-                        borderBottom: idx < 4 ? `1px solid ${colors.border}` : 'none',
-                      }}
-                    >
-                      {benefit}
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTA Button */}
-                <button
-                  onClick={() => setSplashStep(2)}
-                  style={{
-                    width: '100%',
-                    padding: '16px',
-                    background: `linear-gradient(135deg, ${colors.gold} 0%, #c9a947 100%)`,
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: '#000',
-                    cursor: 'pointer',
-                    boxShadow: `0 4px 20px ${colors.gold}40`,
-                    marginBottom: '12px',
-                  }}
-                >
-                  Claim 20% Off →
-                </button>
-
-                {/* No Thank You Button */}
-                <button
-                  onClick={handleSplashDismiss}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    background: 'transparent',
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    color: colors.muted,
-                    cursor: 'pointer',
-                  }}
-                >
-                  No Thank You
-                </button>
-
-                <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '11px', color: colors.muted }}>
-                  Cancel anytime • No commitments
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Email Capture */}
-            {splashStep === 2 && (
-              <div style={{ padding: '40px 28px 28px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '12px' }}>📧</div>
-                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>
-                    Get Your Discount
-                  </div>
-                  <div style={{ fontSize: '13px', color: colors.muted }}>
-                    Enter your email to claim 20% off Pro
-                  </div>
-                </div>
-
-                {/* Email Input */}
-                <div style={{ marginBottom: '20px' }}>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={splashEmail}
-                    onChange={(e) => setSplashEmail(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSplashCheckout()}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      background: colors.inputBg,
-                      border: `2px solid ${colors.inputBorder}`,
-                      borderRadius: '12px',
-                      fontSize: '15px',
-                      color: colors.text,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                    autoFocus
-                  />
-                </div>
-
-                {/* Discount Summary */}
-                <div
-                  style={{
-                    background: `${colors.gold}10`,
-                    borderRadius: '10px',
-                    padding: '12px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '12px', color: colors.muted }}>CalGeo Pro (monthly)</span>
-                    <span style={{ fontSize: '12px', color: colors.muted, textDecoration: 'line-through' }}>$4.99</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '12px', color: colors.gold }}>First-visit discount (20%)</span>
-                    <span style={{ fontSize: '12px', color: colors.gold }}>-$1.00</span>
-                  </div>
-                  <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '8px', marginTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>First Month Total</span>
-                    <span style={{ fontSize: '18px', fontWeight: '700', color: colors.gold }}>$3.99</span>
-                  </div>
-                </div>
-
-                {/* Continue Button */}
-                <button
-                  onClick={handleSplashCheckout}
-                  style={{
-                    width: '100%',
-                    padding: '16px',
-                    background: `linear-gradient(135deg, ${colors.gold} 0%, #c9a947 100%)`,
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: '#000',
-                    cursor: 'pointer',
-                    marginBottom: '12px',
-                  }}
-                >
-                  Continue to Checkout
-                </button>
-
-                <button
-                  onClick={() => setSplashStep(1)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    background: 'transparent',
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    color: colors.muted,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ← Back
-                </button>
-
-                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: colors.muted, lineHeight: '1.5' }}>
-                  Then $4.99/month after first month<br />Cancel anytime
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
