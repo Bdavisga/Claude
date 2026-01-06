@@ -47,6 +47,7 @@ export default function CalGeo() {
   const [showMenu, setShowMenu] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false); // Mobile sidebar toggle
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // Track if viewport is mobile
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
@@ -138,6 +139,17 @@ export default function CalGeo() {
   const mapContainerRef = useRef(null);
 
   // ==================== EFFECTS ====================
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   useEffect(() => {
     // Load from localStorage
     try {
@@ -980,7 +992,7 @@ export default function CalGeo() {
   return (
     <div className="bg-primary" style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
       {/* SIDEBAR OVERLAY (Mobile only) */}
-      {showSidebar && window.innerWidth < 768 && (
+      {showSidebar && isMobile && (
         <div
           style={{
             position: 'fixed',
@@ -995,7 +1007,7 @@ export default function CalGeo() {
       {/* LEFT SIDEBAR */}
       <aside style={{
         position: 'fixed',
-        left: showSidebar || window.innerWidth >= 768 ? 0 : '-70px',
+        left: showSidebar || !isMobile ? 0 : '-70px',
         top: 0,
         bottom: 0,
         width: '70px',
@@ -1023,7 +1035,7 @@ export default function CalGeo() {
             key={t.id}
             onClick={() => {
               setActiveTab(t.id);
-              if (window.innerWidth < 768) setShowSidebar(false);
+              if (isMobile) setShowSidebar(false);
             }}
             title={t.label}
             style={{
@@ -1052,7 +1064,7 @@ export default function CalGeo() {
       <header style={{
         background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
         borderBottom: '1px solid var(--primary-600)',
-        padding: window.innerWidth < 768 ? '12px' : 'var(--space-md)',
+        padding: isMobile ? '12px' : 'var(--space-md)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1061,11 +1073,11 @@ export default function CalGeo() {
         zIndex: 999,
         backdropFilter: 'blur(12px)',
         boxShadow: 'var(--shadow-sm)',
-        marginLeft: window.innerWidth >= 768 ? '70px' : '0',
+        marginLeft: isMobile ? '0' : '70px',
         gap: '12px'
       }}>
         {/* Left: Sidebar Toggle (Mobile only) */}
-        {window.innerWidth < 768 && (
+        {isMobile && (
           <button
             onClick={() => setShowSidebar(!showSidebar)}
             className="btn-icon"
@@ -1091,12 +1103,12 @@ export default function CalGeo() {
 
         {/* Center/Left: Logo */}
         <div style={{
-          position: window.innerWidth >= 768 ? 'absolute' : 'relative',
-          left: window.innerWidth >= 768 ? '50%' : 'auto',
-          transform: window.innerWidth >= 768 ? 'translateX(-50%)' : 'none',
-          flex: window.innerWidth < 768 ? '1' : 'auto'
+          position: isMobile ? 'relative' : 'absolute',
+          left: isMobile ? 'auto' : '50%',
+          transform: isMobile ? 'none' : 'translateX(-50%)',
+          flex: isMobile ? '1' : 'auto'
         }}>
-          <CalGeoLogo size={window.innerWidth < 768 ? 28 : 34} />
+          <CalGeoLogo size={isMobile ? 28 : 34} />
         </div>
 
         {/* Right: Menu button */}
@@ -1124,8 +1136,8 @@ export default function CalGeo() {
       </header>
 
       <main style={{
-        marginLeft: window.innerWidth >= 768 ? '70px' : '0',
-        width: window.innerWidth >= 768 ? 'calc(100% - 70px)' : '100%',
+        marginLeft: isMobile ? '0' : '70px',
+        width: isMobile ? '100%' : 'calc(100% - 70px)',
         display: 'flex',
         justifyContent: 'center',
         padding: 'var(--space-md) var(--space-md) 100px'
