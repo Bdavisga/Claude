@@ -1151,7 +1151,13 @@ export default function CalGeo() {
         justifyContent: 'center',
         padding: 'var(--space-md) var(--space-md) 100px'
       }}>
-        <div style={{ width: '100%', maxWidth: '600px' }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '600px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isMobile ? '16px' : '20px'
+        }}>
         {/* ========== GOLD TAB ========== */}
         {activeTab === 'gold' && (
           <>
