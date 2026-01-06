@@ -119,6 +119,18 @@ export default function CalGeo() {
   const [jadeSize, setJadeSize] = useState('medium');
   const [jadePrice, setJadePrice] = useState('');
 
+  // Diamond Calculator
+  const [diamondOrigin, setDiamondOrigin] = useState('natural'); // 'natural' or 'lab'
+  const [diamondShape, setDiamondShape] = useState('round');
+  const [diamondCarat, setDiamondCarat] = useState('');
+  const [diamondColor, setDiamondColor] = useState('G');
+  const [diamondClarity, setDiamondClarity] = useState('VS2');
+  const [diamondCut, setDiamondCut] = useState('excellent');
+  const [diamondPolish, setDiamondPolish] = useState('excellent');
+  const [diamondSymmetry, setDiamondSymmetry] = useState('excellent');
+  const [diamondFluorescence, setDiamondFluorescence] = useState('none');
+  const [diamondPrice, setDiamondPrice] = useState('');
+
   // History & Shopping
   const [history, setHistory] = useState([]);
   const [shoppingList, setShoppingList] = useState([]);
@@ -967,7 +979,7 @@ export default function CalGeo() {
     if (effectiveTheme === 'light') {
       return {
         bg: '#f5f5f5', bgCard: '#ffffff', border: 'rgba(0,0,0,0.12)',
-        gold: '#c69f40', jade: '#059669', scan: '#7c3aed', list: '#ea580c', history: '#4f46e5',
+        gold: '#c69f40', jade: '#059669', scan: '#7c3aed', diamond: '#60a5fa', list: '#ea580c', history: '#4f46e5',
         text: '#0a0a0a', muted: '#666666', success: '#16a34a', warning: '#ea580c', danger: '#dc2626',
         cardShadow: '0 1px 3px rgba(0,0,0,0.08)',
         inputBg: '#fafafa', inputBorder: 'rgba(0,0,0,0.15)'
@@ -976,7 +988,7 @@ export default function CalGeo() {
     // Dark mode (default) - inspired by One app
     return {
       bg: '#0a0a0a', bgCard: '#1a1a1a', border: 'rgba(255,255,255,0.15)',
-      gold: '#e5c158', jade: '#10b981', scan: '#a78bfa', list: '#fb923c', history: '#818cf8',
+      gold: '#e5c158', jade: '#10b981', scan: '#a78bfa', diamond: '#3b82f6', list: '#fb923c', history: '#818cf8',
       text: '#ffffff', muted: '#9ca3af', success: '#22c55e', warning: '#fb923c', danger: '#ef4444',
       cardShadow: '0 1px 3px rgba(0,0,0,0.3)',
       inputBg: 'rgba(0,0,0,0.3)', inputBorder: 'rgba(255,255,255,0.2)'
@@ -1060,6 +1072,7 @@ export default function CalGeo() {
           { id: 'gold', label: 'Gold', color: colors.gold, useText: true },
           { id: 'silver', label: 'Silver', color: '#c0c0c0', useText: true },
           { id: 'jade', label: 'Jade', color: colors.jade, useText: true },
+          { id: 'diamond', label: 'Diamond', color: colors.diamond, useText: true },
           { id: 'scan', label: 'Scan', color: colors.scan, useText: true },
           { id: 'tools', icon: '🔧', label: 'Tools', color: '#f59e0b', useText: false },
           { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6', useText: false },
@@ -1417,6 +1430,307 @@ export default function CalGeo() {
                 <button onClick={() => addToHistory({ type: 'jade', grade: jadeGradeResult.grade, ratio: (jadeCalc.ratio * 100).toFixed(0), expected: jadeCalc.expected.toFixed(0), price: jadeCalc.preTax.toFixed(2) })} className="btn-secondary" style={{width: '100%', marginTop: '10px', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
               </div>
             )}
+          </>
+        )}
+
+        {/* ========== DIAMOND TAB ========== */}
+        {activeTab === 'diamond' && (
+          <>
+            <div className="card" style={{background: `linear-gradient(135deg, ${colors.diamond}12, ${colors.diamond}05)`, border: `1px solid ${colors.diamond}30` }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.diamond, marginBottom: '8px' }}>💎 Diamond Price Calculator</div>
+              <div style={{ fontSize: '11px', color: colors.muted }}>
+                Calculate fair market value for natural and lab-grown diamonds based on the 4Cs
+              </div>
+            </div>
+
+            {/* Origin Selection */}
+            <div className="card">
+              <label className="label">Origin</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  onClick={() => setDiamondOrigin('natural')}
+                  className="btn-secondary"
+                  style={{
+                    padding: '12px',
+                    background: diamondOrigin === 'natural' ? `${colors.diamond}20` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${diamondOrigin === 'natural' ? colors.diamond : colors.border}`,
+                    color: diamondOrigin === 'natural' ? colors.diamond : colors.text,
+                    fontWeight: diamondOrigin === 'natural' ? '600' : '400'
+                  }}
+                >
+                  💎 Natural
+                </button>
+                <button
+                  onClick={() => setDiamondOrigin('lab')}
+                  className="btn-secondary"
+                  style={{
+                    padding: '12px',
+                    background: diamondOrigin === 'lab' ? `${colors.diamond}20` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${diamondOrigin === 'lab' ? colors.diamond : colors.border}`,
+                    color: diamondOrigin === 'lab' ? colors.diamond : colors.text,
+                    fontWeight: diamondOrigin === 'lab' ? '600' : '400'
+                  }}
+                >
+                  🔬 Lab Grown
+                </button>
+              </div>
+            </div>
+
+            {/* Shape & Carat */}
+            <div className="card">
+              <div className="grid2" style={{marginBottom: '10px' }}>
+                <div>
+                  <label className="label">Shape</label>
+                  <select value={diamondShape} onChange={(e) => setDiamondShape(e.target.value)} className="select">
+                    <option value="round">Round</option>
+                    <option value="cushion">Cushion</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="oval">Oval</option>
+                    <option value="princess">Princess</option>
+                    <option value="pear">Pear</option>
+                    <option value="radiant">Radiant</option>
+                    <option value="marquise">Marquise</option>
+                    <option value="asscher">Asscher</option>
+                    <option value="heart">Heart</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Carat Weight</label>
+                  <input type="number" value={diamondCarat} onChange={(e) => setDiamondCarat(e.target.value)} placeholder="1.00" className="input" step="0.01" min="0.1" max="10" />
+                </div>
+              </div>
+            </div>
+
+            {/* Color & Clarity */}
+            <div className="card">
+              <div className="grid2" style={{marginBottom: '10px' }}>
+                <div>
+                  <label className="label">Color Grade</label>
+                  <select value={diamondColor} onChange={(e) => setDiamondColor(e.target.value)} className="select">
+                    <option value="D">D (Colorless)</option>
+                    <option value="E">E (Colorless)</option>
+                    <option value="F">F (Colorless)</option>
+                    <option value="G">G (Near Colorless)</option>
+                    <option value="H">H (Near Colorless)</option>
+                    <option value="I">I (Near Colorless)</option>
+                    <option value="J">J (Near Colorless)</option>
+                    <option value="K">K (Faint Yellow)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Clarity Grade</label>
+                  <select value={diamondClarity} onChange={(e) => setDiamondClarity(e.target.value)} className="select">
+                    <option value="FL">FL (Flawless)</option>
+                    <option value="IF">IF (Internally Flawless)</option>
+                    <option value="VVS1">VVS1 (Very Very Slightly)</option>
+                    <option value="VVS2">VVS2 (Very Very Slightly)</option>
+                    <option value="VS1">VS1 (Very Slightly)</option>
+                    <option value="VS2">VS2 (Very Slightly)</option>
+                    <option value="SI1">SI1 (Slightly Included)</option>
+                    <option value="SI2">SI2 (Slightly Included)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Cut, Polish, Symmetry */}
+            <div className="card">
+              <div className="grid3">
+                <div>
+                  <label className="label">Cut</label>
+                  <select value={diamondCut} onChange={(e) => setDiamondCut(e.target.value)} className="select">
+                    <option value="excellent">Excellent</option>
+                    <option value="very_good">Very Good</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Polish</label>
+                  <select value={diamondPolish} onChange={(e) => setDiamondPolish(e.target.value)} className="select">
+                    <option value="excellent">Excellent</option>
+                    <option value="very_good">Very Good</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Symmetry</label>
+                  <select value={diamondSymmetry} onChange={(e) => setDiamondSymmetry(e.target.value)} className="select">
+                    <option value="excellent">Excellent</option>
+                    <option value="very_good">Very Good</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Fluorescence & Asking Price */}
+            <div className="card">
+              <div className="grid2">
+                <div>
+                  <label className="label">Fluorescence</label>
+                  <select value={diamondFluorescence} onChange={(e) => setDiamondFluorescence(e.target.value)} className="select">
+                    <option value="none">None</option>
+                    <option value="faint">Faint</option>
+                    <option value="medium">Medium</option>
+                    <option value="strong">Strong</option>
+                    <option value="very_strong">Very Strong</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Asking Price ($)</label>
+                  <input type="number" value={diamondPrice} onChange={(e) => setDiamondPrice(e.target.value)} placeholder="0.00" className="input" step="0.01" />
+                </div>
+              </div>
+            </div>
+
+            {/* Results */}
+            {parseFloat(diamondCarat) > 0 && parseFloat(diamondPrice) > 0 && (() => {
+              // Diamond pricing calculation based on 4Cs
+              const caratWeight = parseFloat(diamondCarat);
+              const askingPrice = parseFloat(diamondPrice);
+
+              // Base price per carat (natural diamonds, excellent cut, D color, FL clarity)
+              const basePricePerCarat = 12000;
+
+              // Origin multiplier
+              const originMultiplier = diamondOrigin === 'natural' ? 1.0 : 0.35; // Lab grown is ~65% cheaper
+
+              // Shape multiplier (round is premium)
+              const shapeMultipliers = {
+                round: 1.0, cushion: 0.85, emerald: 0.82, oval: 0.88, princess: 0.85,
+                pear: 0.80, radiant: 0.83, marquise: 0.78, asscher: 0.80, heart: 0.75
+              };
+              const shapeMultiplier = shapeMultipliers[diamondShape] || 0.85;
+
+              // Color multiplier (D is best)
+              const colorMultipliers = { D: 1.0, E: 0.95, F: 0.90, G: 0.85, H: 0.78, I: 0.70, J: 0.62, K: 0.55 };
+              const colorMultiplier = colorMultipliers[diamondColor] || 0.70;
+
+              // Clarity multiplier (FL is best)
+              const clarityMultipliers = { FL: 1.0, IF: 0.93, VVS1: 0.85, VVS2: 0.78, VS1: 0.70, VS2: 0.62, SI1: 0.52, SI2: 0.45 };
+              const clarityMultiplier = clarityMultipliers[diamondClarity] || 0.60;
+
+              // Cut multiplier
+              const cutMultipliers = { excellent: 1.0, very_good: 0.92, good: 0.85, fair: 0.75 };
+              const cutMultiplier = cutMultipliers[diamondCut] || 0.85;
+
+              // Polish & Symmetry (minor impact)
+              const polishMultipliers = { excellent: 1.0, very_good: 0.98, good: 0.95, fair: 0.92 };
+              const polishMultiplier = polishMultipliers[diamondPolish] || 0.95;
+
+              const symmetryMultipliers = { excellent: 1.0, very_good: 0.98, good: 0.95, fair: 0.92 };
+              const symmetryMultiplier = symmetryMultipliers[diamondSymmetry] || 0.95;
+
+              // Fluorescence impact (negative for strong fluorescence)
+              const fluorescenceMultipliers = { none: 1.0, faint: 0.98, medium: 0.95, strong: 0.90, very_strong: 0.85 };
+              const fluorescenceMultiplier = fluorescenceMultipliers[diamondFluorescence] || 1.0;
+
+              // Carat weight premium (larger diamonds are disproportionately more expensive)
+              const caratPremium = caratWeight < 0.5 ? 0.7 :
+                                   caratWeight < 1.0 ? 1.0 :
+                                   caratWeight < 1.5 ? 1.4 :
+                                   caratWeight < 2.0 ? 1.8 :
+                                   caratWeight < 3.0 ? 2.2 : 2.8;
+
+              // Calculate estimated price per carat
+              const estimatedPricePerCarat = basePricePerCarat *
+                originMultiplier *
+                shapeMultiplier *
+                colorMultiplier *
+                clarityMultiplier *
+                cutMultiplier *
+                polishMultiplier *
+                symmetryMultiplier *
+                fluorescenceMultiplier *
+                caratPremium;
+
+              // Total estimated price
+              const estimatedTotal = estimatedPricePerCarat * caratWeight;
+
+              // Asking price per carat
+              const askingPricePerCarat = askingPrice / caratWeight;
+
+              // Price ratio
+              const priceRatio = (askingPrice / estimatedTotal) * 100;
+
+              // Grade the deal
+              let grade, gradeColor, gradeEmoji, gradeBg;
+              if (priceRatio <= 80) {
+                grade = 'EXCELLENT DEAL';
+                gradeColor = colors.success;
+                gradeEmoji = '🎉';
+                gradeBg = `${colors.success}15`;
+              } else if (priceRatio <= 95) {
+                grade = 'GOOD PRICE';
+                gradeColor = '#10b981';
+                gradeEmoji = '✅';
+                gradeBg = '#10b98115';
+              } else if (priceRatio <= 110) {
+                grade = 'FAIR PRICE';
+                gradeColor = colors.warning;
+                gradeEmoji = '⚖️';
+                gradeBg = `${colors.warning}15`;
+              } else if (priceRatio <= 130) {
+                grade = 'OVERPRICED';
+                gradeColor = '#ff6b6b';
+                gradeEmoji = '⚠️';
+                gradeBg = '#ff6b6b15';
+              } else {
+                grade = 'AVOID';
+                gradeColor = colors.danger;
+                gradeEmoji = '🚫';
+                gradeBg = `${colors.danger}15`;
+              }
+
+              return (
+                <div className="card" style={{background: gradeBg, border: `1px solid ${gradeColor}50` }}>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '42px', marginBottom: '4px' }}>{gradeEmoji}</div>
+                    <div style={{ fontSize: '24px', fontWeight: '700', color: gradeColor }}>{grade}</div>
+                    <div style={{ fontSize: '32px', fontWeight: '700', fontFamily: 'monospace', color: gradeColor }}>{priceRatio.toFixed(0)}%</div>
+                    <div style={{ fontSize: '11px', color: colors.muted }}>of estimated fair value</div>
+                  </div>
+
+                  <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px' }}>
+                      <span style={{ color: colors.muted }}>Estimated Value</span>
+                      <span style={{ color: colors.diamond, fontFamily: 'monospace', fontWeight: '600' }}>${estimatedTotal.toFixed(0)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px' }}>
+                      <span style={{ color: colors.muted }}>Price per Carat</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>${askingPricePerCarat.toFixed(0)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px' }}>
+                      <span style={{ color: colors.muted }}>Est. per Carat</span>
+                      <span style={{ color: colors.diamond, fontFamily: 'monospace', fontWeight: '600' }}>${estimatedPricePerCarat.toFixed(0)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '4px' }}>
+                      <span style={{ color: colors.muted }}>Asking Price</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '14px' }}>${askingPrice.toFixed(0)}</span>
+                    </div>
+                  </div>
+
+                  {/* Market Insights */}
+                  <div style={{ background: `${colors.diamond}10`, border: `1px solid ${colors.diamond}30`, borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '600', color: colors.diamond, marginBottom: '8px' }}>💡 Market Insights</div>
+                    <div style={{ fontSize: '10px', color: colors.muted, lineHeight: '1.6' }}>
+                      {diamondOrigin === 'lab' && '• Lab-grown diamonds are ~65% less expensive than natural\n'}
+                      {diamondShape === 'round' && '• Round cuts command a premium due to popularity\n'}
+                      {['D', 'E', 'F'].includes(diamondColor) && '• Colorless grades are most valuable\n'}
+                      {['FL', 'IF', 'VVS1'].includes(diamondClarity) && '• Exceptional clarity significantly increases value\n'}
+                      {diamondCut === 'excellent' && '• Excellent cut maximizes brilliance and value\n'}
+                      {fluorescenceMultiplier < 1.0 && '• Fluorescence may reduce value by ' + ((1 - fluorescenceMultiplier) * 100).toFixed(0) + '%\n'}
+                      {caratWeight >= 2.0 && '• Diamonds over 2 carats have significant size premium\n'}
+                    </div>
+                  </div>
+
+                  <button onClick={() => addToHistory({ type: 'diamond', grade, ratio: priceRatio.toFixed(0), estimated: estimatedTotal.toFixed(0), price: askingPrice.toFixed(2), carat: caratWeight })} className="btn-secondary" style={{width: '100%', background: 'rgba(255,255,255,0.08)', color: '#aaa', border: `1px solid ${colors.border}` }}>📜 Save to History</button>
+                </div>
+              );
+            })()}
           </>
         )}
 
