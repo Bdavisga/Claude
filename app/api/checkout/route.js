@@ -71,9 +71,8 @@ export async function POST(request) {
       success_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.vercel.app'}/?upgraded=${tier}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.vercel.app'}/?canceled=true`,
 
-      // Trial period
+      // Subscription metadata (no trial period)
       subscription_data: {
-        trial_period_days: tier === 'pro' ? 3 : 7,
         metadata: { tier, userId: userId || 'anon', email: email || '' },
       },
 
