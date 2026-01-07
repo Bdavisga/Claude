@@ -40,28 +40,93 @@ export async function POST(request) {
 
       console.log(`✅ NEW SUBSCRIBER: ${userId || email} -> ${tier}`);
 
-      // Update user tier in Supabase
+      // Update or create user in Supabase
       if (userId) {
         try {
-          const { error } = await supabaseAdmin
+          // Try to update existing user first
+          const { data: existingUser, error: fetchError } = await supabaseAdmin
             .from('users')
-            .update({
-              tier: tier || 'pro',
-              stripe_customer_id: session.customer,
-              stripe_subscription_id: session.subscription,
-              subscription_status: 'active',
-              scan_count: 0, // Reset scan count on upgrade
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', userId);
+            .select('id')
+            .eq('id', userId)
+            .single();
 
-          if (error) {
-            console.error('Error updating user in database:', error);
+          if (existingUser) {
+            // User exists, update them
+            const { error } = await supabaseAdmin
+              .from('users')
+              .update({
+                tier: tier || 'pro',
+                stripe_customer_id: session.customer,
+                stripe_subscription_id: session.subscription,
+                subscription_status: 'active',
+                scan_count: 0,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', userId);
+
+            if (error) {
+              console.error('Error updating user in database:', error);
+            } else {
+              console.log(`✅ Database updated: ${userId} -> ${tier}`);
+            }
           } else {
-            console.log(`✅ Database updated: ${userId} -> ${tier}`);
+            // User doesn't exist, create them
+            const { error } = await supabaseAdmin
+              .from('users')
+              .insert({
+                id: userId,
+                email: email,
+                tier: tier || 'pro',
+                stripe_customer_id: session.customer,
+                stripe_subscription_id: session.subscription,
+                subscription_status: 'active',
+                scan_count: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+
+            if (error) {
+              console.error('Error creating user in database:', error);
+            } else {
+              console.log(`✅ New user created: ${userId} -> ${tier}`);
+            }
           }
         } catch (err) {
-          console.error('Database update failed:', err);
+          console.error('Database operation failed:', err);
+        }
+      } else if (email) {
+        // No userId but we have email - try to find user by email
+        try {
+          const { data: existingUser, error: fetchError } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+          if (existingUser) {
+            // Update by email
+            const { error } = await supabaseAdmin
+              .from('users')
+              .update({
+                tier: tier || 'pro',
+                stripe_customer_id: session.customer,
+                stripe_subscription_id: session.subscription,
+                subscription_status: 'active',
+                scan_count: 0,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('email', email);
+
+            if (error) {
+              console.error('Error updating user by email:', error);
+            } else {
+              console.log(`✅ User updated by email: ${email} -> ${tier}`);
+            }
+          } else {
+            console.warn(`⚠️ No user found for email: ${email}`);
+          }
+        } catch (err) {
+          console.error('Email lookup failed:', err);
         }
       }
       break;
