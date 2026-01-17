@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./styles/calgeo-design-system.css";
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata = {
   title: "CalGeo - Jewelry Valuation App",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         {children}
+        <Analytics />
       </body>
     </html>
   );
