@@ -2308,7 +2308,18 @@ export default function CalGeo() {
       {/* ABOUT MODAL */}
       {showAbout && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px', overflowY: 'auto' }} onClick={() => setShowAbout(false)}>
-          <div style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }} onClick={(e) => e.stopPropagation()}>
+          <div
+            style={{ background: '#13131a', borderRadius: '18px', padding: '22px', maxWidth: '500px', width: '100%', border: `1px solid ${colors.gold}30`, margin: '20px' }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => { e.currentTarget.dataset.touchStartY = e.touches[0].clientY; }}
+            onTouchEnd={(e) => {
+              const startY = parseFloat(e.currentTarget.dataset.touchStartY || 0);
+              const endY = e.changedTouches[0].clientY;
+              if (endY - startY > 80) setShowAbout(false);
+            }}
+          >
+            {/* Swipe indicator */}
+            <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.3)', borderRadius: '2px', margin: '0 auto 16px auto' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>ℹ️ About CalGeo</div>
               <button onClick={() => setShowAbout(false)} className="btn-secondary" style={{padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
@@ -2410,7 +2421,18 @@ export default function CalGeo() {
       {/* MENU DRAWER */}
       {showMenu && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={() => setShowMenu(false)}>
-          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto', zIndex: 1101 }} onClick={(e) => e.stopPropagation()}>
+          <div
+            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto', zIndex: 1101 }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => { e.currentTarget.dataset.touchStartX = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              const startX = parseFloat(e.currentTarget.dataset.touchStartX || 0);
+              const endX = e.changedTouches[0].clientX;
+              if (endX - startX > 60) setShowMenu(false);
+            }}
+          >
+            {/* Swipe indicator */}
+            <div style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', width: '4px', height: '40px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CalGeoLogo size={28} />
@@ -2477,11 +2499,9 @@ export default function CalGeo() {
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
               {[
                 { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
-                { label: '🔧 Tools', action: () => { setActiveTab('tools'); setShowMenu(false); } },
                 { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
                 { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
-                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } },
-                { label: '⚙️ Settings', action: () => { setShowMenu(false); setShowSettings(true); } }
+                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } }
               ].map((item, idx) => (
                 <button key={idx} onClick={item.action} className="btn-secondary" style={{width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
               ))}
