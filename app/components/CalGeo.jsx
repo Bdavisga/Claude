@@ -2510,18 +2510,6 @@ export default function CalGeo() {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Quick Actions</div>
-              {[
-                { label: '📋 How to Use Guide', action: () => { setActiveTab('guide'); setShowMenu(false); } },
-                { label: '🔄 Refresh Spot Price', action: () => { refreshSpotPrice(); setShowMenu(false); } },
-                { label: '📖 View Glossary', action: () => { setActiveTab('glossary'); setShowMenu(false); } },
-                { label: 'ℹ️ About & Sources', action: () => { setShowMenu(false); setShowAbout(true); } }
-              ].map((item, idx) => (
-                <button key={idx} onClick={item.action} className="btn-secondary" style={{width: '100%', marginBottom: '8px', background: 'rgba(255,255,255,0.05)', color: colors.text, border: `1px solid ${colors.border}`, textAlign: 'left', fontSize: '13px' }}>{item.label}</button>
-              ))}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '10px', color: colors.muted, textTransform: 'uppercase', fontWeight: '600', marginBottom: '10px' }}>Account</div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
                 {isLoggedIn && user && (
@@ -2542,6 +2530,12 @@ export default function CalGeo() {
             </div>
 
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '16px' }}>
+              <button
+                onClick={() => { setShowMenu(false); setShowAbout(true); }}
+                style={{ width: '100%', background: 'transparent', border: 'none', color: colors.muted, fontSize: '12px', padding: '8px', cursor: 'pointer', marginBottom: '12px' }}
+              >
+                ℹ️ About & Sources
+              </button>
               <div style={{ fontSize: '9px', color: '#555', textAlign: 'center', lineHeight: '1.4' }}>
                 <div style={{ fontWeight: '600', color: colors.gold, marginBottom: '6px' }}>Marketsavage Product</div>
                 <div>CalGeo v1.2</div>
