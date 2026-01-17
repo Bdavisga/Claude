@@ -1,13 +1,27 @@
 {
   "name": "CalGeo - Jewelry Valuation App",
   "short_name": "CalGeo",
-  "description": "Professional jewelry valuation for gold, silver, and jade",
+  "description": "Professional jewelry valuation for gold, silver, and jade with live pricing",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#e5c158",
+  "theme_color": "#0a0a0a",
   "orientation": "portrait",
+  "id": "calgeo-pwa",
   "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/calgeo-logo-512.png",
       "sizes": "512x512",
@@ -22,5 +36,5 @@
     }
   ],
   "categories": ["finance", "utilities", "lifestyle"],
-  "screenshots": []
+  "prefer_related_applications": false
 }

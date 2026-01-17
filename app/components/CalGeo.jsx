@@ -1002,7 +1002,7 @@ export default function CalGeo() {
 
   // ==================== RENDER ====================
   return (
-    <div className="bg-primary" style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
+    <div className={`bg-primary ${effectiveTheme === 'light' ? 'theme-light' : ''}`} style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
       {/* SIDEBAR OVERLAY (Mobile only) */}
       {showSidebar && isMobile && (
         <div
@@ -1057,7 +1057,7 @@ export default function CalGeo() {
         top: 0,
         bottom: 0,
         width: '70px',
-        background: 'linear-gradient(180deg, var(--bg-secondary) 0%, #0a0a10 100%)',
+        background: effectiveTheme === 'light' ? 'linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%)' : 'linear-gradient(180deg, var(--bg-secondary) 0%, #0a0a10 100%)',
         borderRight: `1px solid ${colors.gold}30`,
         zIndex: 1000,
         display: 'flex',
@@ -1069,14 +1069,14 @@ export default function CalGeo() {
         transition: 'left 0.3s ease'
       }}>
         {[
-          { id: 'gold', label: 'Gold', color: colors.gold, useText: true },
-          { id: 'silver', label: 'Silver', color: '#c0c0c0', useText: true },
-          { id: 'jade', label: 'Jade', color: colors.jade, useText: true },
-          { id: 'diamond', label: 'Diamond', color: colors.diamond, useText: true },
-          { id: 'scan', label: 'Scan', color: colors.scan, useText: true },
-          { id: 'tools', icon: '🔧', label: 'Tools', color: '#f59e0b', useText: false },
-          { id: 'glossary', icon: '📖', label: 'Terms', color: '#8b5cf6', useText: false },
-          { id: 'guide', icon: '📋', label: 'Guide', color: '#06b6d4', useText: false }
+          { id: 'gold', label: 'Gold', color: colors.gold },
+          { id: 'silver', label: 'Silver', color: '#c0c0c0' },
+          { id: 'jade', label: 'Jade', color: colors.jade },
+          { id: 'diamond', label: 'Diamond', color: colors.diamond },
+          { id: 'scan', label: 'Scan', color: colors.scan },
+          { id: 'tools', label: 'Tools', color: '#f59e0b' },
+          { id: 'glossary', label: 'Terms', color: '#8b5cf6' },
+          { id: 'guide', label: 'Start', color: '#06b6d4' }
         ].map(t => (
           <button
             key={t.id}
@@ -1086,14 +1086,15 @@ export default function CalGeo() {
             }}
             title={t.label}
             style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '12px',
+              width: '54px',
+              height: '44px',
+              borderRadius: '10px',
               border: activeTab === t.id ? `2px solid ${t.color}` : '1px solid rgba(255,255,255,0.1)',
               background: activeTab === t.id ? `${t.color}20` : 'rgba(255,255,255,0.05)',
               color: activeTab === t.id ? t.color : colors.muted,
-              fontSize: t.useText ? '11px' : '24px',
-              fontWeight: t.useText ? '700' : 'normal',
+              fontSize: '10px',
+              fontWeight: '700',
+              letterSpacing: '-0.3px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -1102,9 +1103,38 @@ export default function CalGeo() {
               boxShadow: activeTab === t.id ? `0 0 20px ${t.color}40` : 'none'
             }}
           >
-            {t.useText ? t.label : t.icon}
+            {t.label}
           </button>
         ))}
+
+        {/* Theme Toggle at Bottom */}
+        <div style={{ marginTop: 'auto', paddingBottom: '20px', paddingTop: '12px' }}>
+          <button
+            onClick={() => {
+              const modes = ['dark', 'light', 'system'];
+              const currentIndex = modes.indexOf(theme);
+              const nextIndex = (currentIndex + 1) % modes.length;
+              setTheme(modes[nextIndex]);
+            }}
+            title={`Theme: ${theme} (click to change)`}
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.05)',
+              color: theme === 'light' ? '#f59e0b' : theme === 'system' ? '#8b5cf6' : colors.muted,
+              fontSize: '20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {theme === 'light' ? '☀️' : theme === 'system' ? '💻' : '🌙'}
+          </button>
+        </div>
       </aside>
 
       {/* HEADER */}
@@ -1787,9 +1817,9 @@ export default function CalGeo() {
             {/* Tools Sub-Tabs */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
               {[
-                { id: 'history', icon: '📜', label: 'History' },
-                { id: 'compare', icon: '🛒', label: 'Compare' },
-                { id: 'map', icon: '🗺️', label: 'Map' }
+                { id: 'history', label: 'History' },
+                { id: 'compare', label: 'Compare' },
+                { id: 'map', label: 'Map' }
               ].map(sub => (
                 <button
                   key={sub.id}
@@ -1805,7 +1835,7 @@ export default function CalGeo() {
                     fontWeight: toolsSubTab === sub.id ? '600' : '400'
                   }}
                 >
-                  {sub.icon} {sub.label}
+                  {sub.label}
                 </button>
               ))}
             </div>
@@ -2340,58 +2370,6 @@ export default function CalGeo() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: colors.gold }}>⚙️ Settings</div>
               <button onClick={() => setShowSettings(false)} className="btn-secondary" style={{padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}` }}>✕</button>
-            </div>
-
-            {/* THEME SELECTION */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '10px' }}>Display Mode</div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => setTheme('dark')}
-                  className="btn-secondary"
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: theme === 'dark' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${theme === 'dark' ? colors.gold : colors.border}`,
-                    color: theme === 'dark' ? colors.gold : colors.text,
-                    fontWeight: theme === 'dark' ? '600' : '400'
-                  }}
-                >
-                  🌙 Dark
-                </button>
-                <button
-                  onClick={() => setTheme('light')}
-                  className="btn-secondary"
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: theme === 'light' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${theme === 'light' ? colors.gold : colors.border}`,
-                    color: theme === 'light' ? colors.gold : colors.text,
-                    fontWeight: theme === 'light' ? '600' : '400'
-                  }}
-                >
-                  ☀️ Light
-                </button>
-                <button
-                  onClick={() => setTheme('system')}
-                  className="btn-secondary"
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: theme === 'system' ? `${colors.gold}20` : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${theme === 'system' ? colors.gold : colors.border}`,
-                    color: theme === 'system' ? colors.gold : colors.text,
-                    fontWeight: theme === 'system' ? '600' : '400'
-                  }}
-                >
-                  💻 System
-                </button>
-              </div>
-              <div style={{ fontSize: '10px', color: colors.muted, marginTop: '6px' }}>
-                {theme === 'system' ? 'Automatically matches your device settings' : `Always use ${theme} mode`}
-              </div>
             </div>
 
             {/* STATE SELECTION */}

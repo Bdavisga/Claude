@@ -1,6 +1,49 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** December 28, 2025 - 5:00 PM EST
+**Last Updated:** January 17, 2026 - 6:30 PM EST
+
+---
+
+## 📱 January 17, 2026 - PWA Setup & UI Improvements
+
+### **Progressive Web App (PWA) for iOS**
+- **Service Worker** (`/sw.js`): Network-first caching with offline fallback
+- **Offline Page** (`/offline.html`): Branded offline experience when no internet
+- **iOS Splash Screens**: 10 sizes generated for all iPhone models (SE to 15 Pro Max)
+- **Apple Meta Tags**: Full iOS PWA support with status bar styling
+- **Manifest.json**: Updated with proper icons, scope, and PWA metadata
+
+**How to Install on iPhone:**
+1. Open calgeo.vercel.app in Safari
+2. Tap Share → "Add to Home Screen"
+3. App launches fullscreen like a native app
+
+### **UI Improvements**
+- **Sidebar Buttons**: All uniform sizing (54x44px), text-only labels
+- **Diamond Button**: Now fits properly with consistent spacing
+- **Tools Sub-tabs**: Removed icons, text only (History, Compare, Map)
+- **Guide → Start**: Renamed navigation label
+- **Theme Toggle**: Moved from Settings to sidebar bottom (🌙→☀️→💻)
+
+### **Theme System Overhaul**
+- **Light Mode CSS Variables**: Full page theming support
+- **Sidebar**: Theme-aware background gradient
+- **Removed**: Theme toggle from Settings modal (now in sidebar)
+
+**Files Created:**
+- `public/sw.js` - Service worker
+- `public/offline.html` - Offline fallback page
+- `public/splash/*.png` - 10 iOS splash screen images
+- `scripts/generate-splash.js` - Splash screen generator
+
+**Files Modified:**
+- `app/components/CalGeo.jsx` - UI updates, theme toggle
+- `app/layout.js` - PWA meta tags, service worker registration
+- `app/styles/calgeo-design-system.css` - Light mode CSS variables
+- `public/manifest.json` - Enhanced PWA manifest
+- `package.json` - Added sharp for image processing
+
+**Impact:** App now installable on iPhone as PWA with native-like experience
 
 ---
 
