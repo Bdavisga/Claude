@@ -337,23 +337,37 @@ export default function CalGeo() {
     { value: '10', label: '10K', purity: 0.417, desc: '41.7%' }
   ];
 
+  // Chain styles with labor markups based on TRAXNYC/Miami wholesale market research
+  // Markup = % over melt value for labor/craftsmanship
   const chainStyles = [
-    { value: 'plain', label: 'Plain/Cable', markup: 20 },
-    { value: 'box', label: 'Box', markup: 22 },
+    // Basic Chains (15-22% labor)
+    { value: 'hollow', label: 'Hollow (Any Style)', markup: 15 },
+    { value: 'plain', label: 'Cable/Link', markup: 18 },
+    { value: 'ball', label: 'Ball/Bead', markup: 18 },
+    { value: 'box', label: 'Box', markup: 20 },
+    { value: 'paperclip', label: 'Paperclip', markup: 22 },
+    // Mid-Tier Chains (25-32% labor)
     { value: 'snake', label: 'Snake', markup: 25 },
+    { value: 'herringbone', label: 'Herringbone', markup: 26 },
     { value: 'singapore', label: 'Singapore', markup: 28 },
     { value: 'curb', label: 'Curb', markup: 28 },
+    { value: 'anchor', label: 'Anchor/Mariner', markup: 30 },
     { value: 'rope', label: 'Rope', markup: 30 },
     { value: 'figaro', label: 'Figaro', markup: 30 },
-    { value: 'mariner', label: 'Mariner', markup: 32 },
-    { value: 'cuban', label: 'Cuban', markup: 35 },
-    { value: 'wheat', label: 'Wheat', markup: 35 },
-    { value: 'herringbone', label: 'Herringbone', markup: 38 },
-    { value: 'franco', label: 'Franco', markup: 40 },
+    { value: 'wheat', label: 'Wheat/Spiga', markup: 32 },
+    // Premium Chains (35-45% labor)
+    { value: 'moon_cut', label: 'Moon Cut', markup: 35 },
+    { value: 'cuban', label: 'Cuban Link', markup: 38 },
+    { value: 'prism', label: 'Prism Cut', markup: 38 },
+    { value: 'franco', label: 'Franco', markup: 42 },
     { value: 'foxtail', label: 'Foxtail', markup: 42 },
-    { value: 'miami_cuban', label: 'Miami Cuban', markup: 45 },
-    { value: 'byzantine', label: 'Byzantine', markup: 50 },
-    { value: 'hollow', label: 'Hollow', markup: 20 }
+    { value: 'rope_dc', label: 'Rope Diamond Cut', markup: 42 },
+    // Hand-Forged/Luxury (48-60% labor)
+    { value: 'miami_cuban', label: 'Miami Cuban (Solid)', markup: 48 },
+    { value: 'franco_dc', label: 'Franco Diamond Cut', markup: 50 },
+    { value: 'miami_cuban_dc', label: 'Miami Cuban Diamond Cut', markup: 52 },
+    { value: 'byzantine', label: 'Byzantine', markup: 55 },
+    { value: 'custom', label: 'Custom/Handmade', markup: 60 }
   ];
 
   const charmStyles = [
