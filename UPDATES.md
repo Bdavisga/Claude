@@ -1,6 +1,48 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** January 17, 2026 - 7:00 PM EST
+**Last Updated:** January 17, 2026 - 8:30 PM EST
+
+---
+
+## 📝 January 17, 2026 - Blog Section & AdSense Integration
+
+### **Blog Section Added**
+- **Blog Listing Page** (`/blog`): Grid of articles with sidebar
+- **Individual Post Pages** (`/blog/[slug]`): Full articles with SEO metadata
+- **3 Starter Posts**:
+  - "How to Tell If Gold Is Real: 7 Simple Tests"
+  - "Understanding Gold Karat: 10K vs 14K vs 18K vs 24K"
+  - "What Is My Gold Jewelry Worth? A Complete Guide"
+
+### **AdSense Integration**
+- **Ad Slot Component**: Reusable component for all ad placements
+- **Ad Placements**:
+  - Header leaderboard (728x90)
+  - Sidebar rectangle (300x250)
+  - In-content responsive ads
+  - Footer leaderboard (728x90)
+- **Publisher ID**: Configured with ca-pub-1897097068256252
+
+### **SEO Features**
+- Dynamic metadata per post (title, description, Open Graph)
+- JSON-LD structured data for articles
+- Keyword optimization for organic traffic
+- Share buttons (Twitter, Facebook, LinkedIn, Copy link)
+
+**Files Created:**
+- `app/blog/layout.js` - Blog layout with AdSense script
+- `app/blog/page.js` - Blog listing page
+- `app/blog/[slug]/page.js` - Individual post pages
+- `app/blog/components/AdSlot.jsx` - AdSense component
+- `app/blog/components/BlogCard.jsx` - Post preview card
+- `app/blog/components/BlogPost.jsx` - Full post display
+- `app/blog/components/BlogHeader.jsx` - Blog navigation
+- `app/blog/blog.css` - Blog-specific styles
+- `lib/blog-posts.js` - Blog content/data
+
+**URLs:**
+- Blog listing: https://calgeo.vercel.app/blog
+- Example post: https://calgeo.vercel.app/blog/how-to-tell-if-gold-is-real
 
 ---
 
