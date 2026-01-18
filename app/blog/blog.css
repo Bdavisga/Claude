@@ -16,9 +16,21 @@
   padding: 0 var(--space-md, 16px);
 }
 
-/* Hide header ad on mobile - too wide */
+/* Responsive ad visibility */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
 @media (max-width: 768px) {
-  .blog-content-wrapper > .ad-slot.ad-leaderboard {
+  .mobile-only {
+    display: flex;
+  }
+
+  .desktop-only {
     display: none;
   }
 }

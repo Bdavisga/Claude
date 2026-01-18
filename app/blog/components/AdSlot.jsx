@@ -81,7 +81,11 @@ export default function AdSlot({
 
 // Preset ad components for common placements
 export function HeaderAd({ className }) {
-  return <AdSlot format="leaderboard" className={className} />;
+  return <AdSlot format="leaderboard" className={`desktop-only ${className || ''}`} />;
+}
+
+export function MobileHeaderAd({ className }) {
+  return <AdSlot format="auto" className={`mobile-only ${className || ''}`} style={{ minHeight: '100px', maxHeight: '120px' }} />;
 }
 
 export function SidebarAd({ className }) {

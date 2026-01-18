@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getPostBySlug, getAllPosts, getRelatedPosts } from '@/lib/blog-posts';
 import BlogPost from '../components/BlogPost';
 import BlogCard from '../components/BlogCard';
-import { HeaderAd, SidebarAd, FooterAd } from '../components/AdSlot';
+import { HeaderAd, MobileHeaderAd, SidebarAd, FooterAd } from '../components/AdSlot';
 import Link from 'next/link';
 
 // Generate static paths for all blog posts
@@ -87,8 +87,9 @@ export default async function BlogPostPage({ params }) {
       />
 
       <div className="blog-content-wrapper">
-        {/* Header Ad */}
+        {/* Header Ads - Desktop leaderboard, Mobile responsive */}
         <HeaderAd />
+        <MobileHeaderAd />
 
         <div className="blog-layout">
           {/* Main Content */}

@@ -1,6 +1,6 @@
 import { getAllPosts } from '@/lib/blog-posts';
 import BlogCard from './components/BlogCard';
-import { HeaderAd, SidebarAd } from './components/AdSlot';
+import { HeaderAd, MobileHeaderAd, SidebarAd } from './components/AdSlot';
 import Link from 'next/link';
 
 export const metadata = {
@@ -18,8 +18,9 @@ export default function BlogPage() {
 
   return (
     <div className="blog-content-wrapper">
-      {/* Header Ad */}
+      {/* Header Ads - Desktop leaderboard, Mobile responsive */}
       <HeaderAd />
+      <MobileHeaderAd />
 
       <div className="blog-layout">
         {/* Main Content */}
