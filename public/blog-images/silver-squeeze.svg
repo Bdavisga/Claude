@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C0C0C0"/>
+      <stop offset="50%" style="stop-color:#E8E8E8"/>
+      <stop offset="100%" style="stop-color:#A8A8A8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Squeeze arrows -->
+  <polygon points="350,250 450,200 450,300" fill="url(#silver)"/>
+  <polygon points="850,250 750,200 750,300" fill="url(#silver)"/>
+  <!-- Silver bar in middle -->
+  <rect x="480" y="180" width="240" height="140" rx="10" fill="url(#silver)"/>
+  <text x="600" y="265" font-family="Arial, sans-serif" font-size="36" fill="#333" text-anchor="middle" font-weight="bold">Ag</text>
+  <text x="600" y="480" font-family="Arial, sans-serif" font-size="48" fill="#ffffff" text-anchor="middle" font-weight="bold">The Silver Squeeze 2026</text>
+  <text x="600" y="540" font-family="Arial, sans-serif" font-size="28" fill="#C0C0C0" text-anchor="middle">+180% | Supply Crisis</text>
+  <text x="600" y="600" font-family="Arial, sans-serif" font-size="20" fill="#D4AF37" text-anchor="middle">CalGeo</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="jade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00A86B"/>
+      <stop offset="50%" style="stop-color:#50C878"/>
+      <stop offset="100%" style="stop-color:#00A86B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Real jade circle -->
+  <circle cx="400" cy="220" r="100" fill="url(#jade)" opacity="0.8"/>
+  <text x="400" y="235" font-family="Arial, sans-serif" font-size="28" fill="#ffffff" text-anchor="middle" font-weight="bold">REAL</text>
+  <!-- Checkmark -->
+  <circle cx="470" cy="150" r="25" fill="#22c55e"/>
+  <polyline points="455,150 465,160 485,140" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <!-- Fake jade circle -->
+  <circle cx="800" cy="220" r="100" fill="#3d5c3d" opacity="0.6"/>
+  <text x="800" y="235" font-family="Arial, sans-serif" font-size="28" fill="#888888" text-anchor="middle" font-weight="bold">FAKE</text>
+  <!-- X mark -->
+  <circle cx="870" cy="150" r="25" fill="#ef4444"/>
+  <line x1="858" y1="138" x2="882" y2="162" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <line x1="882" y1="138" x2="858" y2="162" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="48" fill="#ffffff" text-anchor="middle" font-weight="bold">How to Tell If Jade Is Real</text>
+  <text x="600" y="480" font-family="Arial, sans-serif" font-size="28" fill="#50C878" text-anchor="middle">6 Authentication Tests</text>
+  <text x="600" y="600" font-family="Arial, sans-serif" font-size="20" fill="#D4AF37" text-anchor="middle">CalGeo</text>
+</svg>

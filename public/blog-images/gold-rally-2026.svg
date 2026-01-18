@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4AF37"/>
+      <stop offset="50%" style="stop-color:#F4CF47"/>
+      <stop offset="100%" style="stop-color:#D4AF37"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Chart line going up -->
+  <polyline points="200,350 400,320 500,300 600,280 700,220 800,180 900,120 1000,80" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="1000" cy="80" r="12" fill="#D4AF37"/>
+  <!-- Arrow up -->
+  <polygon points="1000,40 980,70 1020,70" fill="#22c55e"/>
+  <text x="600" y="480" font-family="Arial, sans-serif" font-size="48" fill="#ffffff" text-anchor="middle" font-weight="bold">Gold Price 2026</text>
+  <text x="600" y="540" font-family="Arial, sans-serif" font-size="28" fill="#22c55e" text-anchor="middle">Record Highs: $4,600+/oz</text>
+  <text x="600" y="600" font-family="Arial, sans-serif" font-size="20" fill="#D4AF37" text-anchor="middle">CalGeo</text>
+</svg>
