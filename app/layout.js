@@ -63,6 +63,12 @@ export default function RootLayout({ children }) {
       <head>
         <meta name="theme-color" content="#0a0a0a" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1897097068256252"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>
         {children}
