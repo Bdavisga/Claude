@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   TIER_CONFIG,
   PaywallModal,
@@ -2544,6 +2545,13 @@ export default function CalGeo() {
             </div>
 
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '16px' }}>
+              <Link
+                href="/blog"
+                onClick={() => setShowMenu(false)}
+                style={{ display: 'block', width: '100%', background: `linear-gradient(135deg, ${colors.gold}20 0%, transparent 100%)`, border: `1px solid ${colors.gold}40`, borderRadius: '10px', color: colors.gold, fontSize: '14px', fontWeight: '600', padding: '12px', cursor: 'pointer', marginBottom: '12px', textAlign: 'center', textDecoration: 'none' }}
+              >
+                📰 Gold & Jewelry Blog
+              </Link>
               <button
                 onClick={() => { setShowMenu(false); setShowAbout(true); }}
                 style={{ width: '100%', background: 'transparent', border: 'none', color: colors.muted, fontSize: '12px', padding: '8px', cursor: 'pointer', marginBottom: '12px' }}
