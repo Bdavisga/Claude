@@ -1077,7 +1077,7 @@ export default function CalGeo() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: '80px',
+        paddingTop: 'calc(80px + env(safe-area-inset-top, 0px))',
         gap: '8px',
         overflowY: 'auto',
         transition: 'left 0.3s ease'
@@ -1156,6 +1156,7 @@ export default function CalGeo() {
         background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
         borderBottom: '1px solid var(--primary-600)',
         padding: isMobile ? '12px' : 'var(--space-md)',
+        paddingTop: isMobile ? 'max(12px, env(safe-area-inset-top, 12px))' : 'var(--space-md)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
