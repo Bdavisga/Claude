@@ -1,6 +1,6 @@
 # CalGeo - Updates & Changelog
 
-**Last Updated:** January 17, 2026 - 6:30 PM EST
+**Last Updated:** January 17, 2026 - 7:00 PM EST
 
 ---
 
@@ -12,6 +12,7 @@
 - **iOS Splash Screens**: 10 sizes generated for all iPhone models (SE to 15 Pro Max)
 - **Apple Meta Tags**: Full iOS PWA support with status bar styling
 - **Manifest.json**: Updated with proper icons, scope, and PWA metadata
+- **iOS Safe Area Fix**: Header/sidebar now respect `env(safe-area-inset-top)` to avoid overlap with iPhone status bar in fullscreen mode
 
 **How to Install on iPhone:**
 1. Open calgeo.vercel.app in Safari
