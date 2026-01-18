@@ -6,12 +6,21 @@
   min-height: 100vh;
   background: var(--bg-primary, #0a0a0a);
   color: var(--text-primary, #ffffff);
+  /* iOS Safe Area Support */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .blog-content-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-md, 16px);
+}
+
+/* Hide header ad on mobile - too wide */
+@media (max-width: 768px) {
+  .blog-content-wrapper > .ad-slot.ad-leaderboard {
+    display: none;
+  }
 }
 
 .blog-layout {
@@ -24,6 +33,7 @@
 @media (max-width: 900px) {
   .blog-layout {
     grid-template-columns: 1fr;
+    padding: var(--space-md, 16px) 0;
   }
 
   .blog-sidebar {
@@ -31,14 +41,78 @@
   }
 }
 
+/* Mobile optimizations */
+@media (max-width: 600px) {
+  .blog-layout {
+    padding: 12px 0;
+    gap: var(--space-md, 16px);
+  }
+
+  .blog-title {
+    font-size: 28px;
+  }
+
+  .blog-subtitle {
+    font-size: 14px;
+    margin-bottom: var(--space-md, 16px);
+  }
+
+  .blog-grid {
+    gap: var(--space-md, 16px);
+  }
+}
+
 /* Blog Header */
 .blog-header {
   background: var(--bg-secondary, #13131a);
   border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  padding: var(--space-md, 16px) var(--space-lg, 24px);
+  padding: 12px var(--space-lg, 24px);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+/* iOS PWA: Add background behind status bar when scrolled */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .blog-header::before {
+    content: '';
+    position: absolute;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--bg-secondary, #13131a);
+    z-index: -1;
+  }
+}
+
+/* Compact header on mobile */
+@media (max-width: 600px) {
+  .blog-header {
+    padding: 10px 12px;
+  }
+
+  .blog-header-logo span:first-child {
+    font-size: 20px;
+  }
+
+  .blog-header-logo span:last-child {
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  .blog-header-nav {
+    gap: 8px;
+  }
+
+  .blog-header-link {
+    font-size: 12px;
+  }
+
+  .blog-header-cta {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }
 
 .blog-header-inner {
