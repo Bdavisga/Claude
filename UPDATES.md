@@ -41,8 +41,8 @@
 - `lib/blog-posts.js` - Blog content/data
 
 **URLs:**
-- Blog listing: https://calgeo.vercel.app/blog
-- Example post: https://calgeo.vercel.app/blog/how-to-tell-if-gold-is-real
+- Blog listing: https://calgeo.app/blog
+- Example post: https://calgeo.app/blog/how-to-tell-if-gold-is-real
 
 ---
 
@@ -57,7 +57,7 @@
 - **iOS Safe Area Fix**: Header/sidebar now respect `env(safe-area-inset-top)` to avoid overlap with iPhone status bar in fullscreen mode
 
 **How to Install on iPhone:**
-1. Open calgeo.vercel.app in Safari
+1. Open calgeo.app in Safari
 2. Tap Share → "Add to Home Screen"
 3. App launches fullscreen like a native app
 
@@ -336,7 +336,7 @@
 ---
 
 ## 🚀 Deployment
-- **Live URL:** https://calgeo.vercel.app
+- **Live URL:** https://calgeo.app
 - **Repository:** https://github.com/Bdavisga/Claude
 - **Auto-deploy:** Enabled via Vercel + GitHub integration
 

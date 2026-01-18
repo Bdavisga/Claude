@@ -72,10 +72,10 @@ export default async function BlogPostPage({ params }) {
       name: 'CalGeo',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://calgeo.vercel.app/calgeo-logo-512.png',
+        url: 'https://calgeo.app/calgeo-logo-512.png',
       },
     },
-    image: post.featuredImage || 'https://calgeo.vercel.app/calgeo-logo-512.png',
+    image: post.featuredImage || 'https://calgeo.app/calgeo-logo-512.png',
   };
 
   return (

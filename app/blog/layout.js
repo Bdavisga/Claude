@@ -4,7 +4,7 @@ import './blog.css';
 import '../styles/calgeo-design-system.css';
 
 export const metadata = {
-  metadataBase: new URL('https://calgeo.vercel.app'),
+  metadataBase: new URL('https://calgeo.app'),
   title: {
     template: '%s | CalGeo Blog',
     default: 'CalGeo Blog - Gold & Jewelry Valuation Tips',

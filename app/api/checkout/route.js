@@ -68,8 +68,8 @@ export async function POST(request) {
       line_items: [{ price: priceId, quantity: 1 }],
 
       // URLs - update with your domain
-      success_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.vercel.app'}/?upgraded=${tier}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.vercel.app'}/?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.app'}/?upgraded=${tier}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'https://calgeo.app'}/?canceled=true`,
 
       // Trial period - let users try before buying
       subscription_data: {
