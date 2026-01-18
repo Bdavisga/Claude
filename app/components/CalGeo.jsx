@@ -1016,7 +1016,21 @@ export default function CalGeo() {
 
   // ==================== RENDER ====================
   return (
-    <div className={`bg-primary ${effectiveTheme === 'light' ? 'theme-light' : ''}`} style={{ minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
+    <div className={`bg-primary ${effectiveTheme === 'light' ? 'theme-light' : ''}`} style={{ minHeight: '100vh', width: '100%', overflow: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* iOS STATUS BAR BACKGROUND - Fixed element behind status bar */}
+      {isMobile && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 'env(safe-area-inset-top, 0px)',
+            background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
+            zIndex: 9999
+          }}
+        />
+      )}
       {/* SIDEBAR OVERLAY (Mobile only) */}
       {showSidebar && isMobile && (
         <div
@@ -1068,7 +1082,7 @@ export default function CalGeo() {
       <aside style={{
         position: 'fixed',
         left: showSidebar || !isMobile ? 0 : '-70px',
-        top: 0,
+        top: 'env(safe-area-inset-top, 0px)',
         bottom: 0,
         width: '70px',
         background: effectiveTheme === 'light' ? 'linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%)' : 'linear-gradient(180deg, var(--bg-secondary) 0%, #0a0a10 100%)',
@@ -1077,7 +1091,7 @@ export default function CalGeo() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: 'calc(80px + env(safe-area-inset-top, 0px))',
+        paddingTop: '80px',
         gap: '8px',
         overflowY: 'auto',
         transition: 'left 0.3s ease'
@@ -1156,13 +1170,12 @@ export default function CalGeo() {
         background: effectiveTheme === 'light' ? '#ffffff' : 'var(--bg-secondary)',
         borderBottom: '1px solid var(--primary-600)',
         padding: isMobile ? '12px' : 'var(--space-md)',
-        paddingTop: isMobile ? 'max(12px, env(safe-area-inset-top, 12px))' : 'var(--space-md)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'sticky',
         top: 0,
-        zIndex: 999,
+        zIndex: 1000,
         backdropFilter: 'blur(12px)',
         boxShadow: 'var(--shadow-sm)',
         marginLeft: isMobile ? '0' : '70px',
@@ -2437,7 +2450,7 @@ export default function CalGeo() {
       {showMenu && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={() => setShowMenu(false)}>
           <div
-            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto', zIndex: 1101 }}
+            style={{ position: 'absolute', top: 'env(safe-area-inset-top, 0px)', right: 0, bottom: 0, width: '280px', background: '#0c0c12', borderLeft: `1px solid ${colors.gold}30`, padding: '20px', overflowY: 'auto', zIndex: 1101 }}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => { e.currentTarget.dataset.touchStartX = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
